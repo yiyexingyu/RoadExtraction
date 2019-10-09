@@ -22,7 +22,7 @@ class CircleSeed:
     _gray_seed_pixels 圆形种子覆盖的灰色像素，是_seed_pixels和灰色像素集的交集
     """
 
-    def __init__(self, position: QPoint, radius: int, seed_pixels: [], direction: float = -1.):
+    def __init__(self, position: QPoint, radius: int, seed_pixels: [], direction: float = 0.):
         self._position = position
         self._radius = radius
         self._direction = direction
@@ -33,6 +33,7 @@ class CircleSeed:
     @property
     def position(self) -> QPoint:
         return self._position
+
 
     @position.setter
     def position(self, new_position: QPoint):
@@ -61,3 +62,7 @@ class CircleSeed:
     @property
     def seed_pixels(self) -> tuple:
         return tuple(self._seed_pixels)
+
+    @property
+    def gray_pixels(self):
+        return self._gray_seed_pixels

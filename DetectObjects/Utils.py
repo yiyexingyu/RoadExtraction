@@ -51,6 +51,18 @@ class GrayPixelsSet:
     def get_gray_pixels_from(src_pixels: [SeedPixel]) -> [SeedPixel]:
         return [pixel for pixel in src_pixels if GrayPixelsSet.is_gray(pixel.color)]
 
+    @staticmethod
+    def get_similarity_gray_pixels(src_pixels: [SeedPixel], parent_reference_color: QColor, color_diff) -> []:
+        """
+        :param src_pixels:
+        :param parent_reference_color:
+        :param color_diff:
+        :return:
+        """
+        return [pixel for pixel in src_pixels if abs(pixel.r - parent_reference_color.red()) < color_diff and abs(
+            pixel.g - parent_reference_color.green()) < color_diff and abs(
+            pixel.b - parent_reference_color.blue()) < color_diff]
+
 
 def get_pixels_from(image: QImage, position: QPoint, radius):
     """
@@ -64,7 +76,7 @@ def get_pixels_from(image: QImage, position: QPoint, radius):
         raise RadiusOverBorder()
 
     result = list()
-    for y in range(position.y() - radius, position.y() + radius+ 1):
+    for y in range(position.y() - radius, position.y() + radius + 1):
         for x in range(position.x() - radius, position.y() + radius + 1):
             if pow(x - position.x(), 2) + pow(y - position.y(), 2) <= pow(radius, 2):
                 pixel_color = image.pixelColor(x, y)
@@ -74,7 +86,6 @@ def get_pixels_from(image: QImage, position: QPoint, radius):
 
 
 def calculate_reference_color_from(circle_seed: CircleSeed) -> QColor:
-
     seed_pixels = circle_seed.seed_pixels
     if not seed_pixels:
         return GrayPixelsSet.standard_gray()
