@@ -49,7 +49,7 @@ class PeripheralCondition:
 def calculate_peripheral_condition(
         circle_seed: CircleSeed, parent_seed: CircleSeed, detection_param: DetectionParameters) -> PeripheralCondition:
     similarity_gray_pixels = GrayPixelsSet.get_similarity_gray_pixels(
-        circle_seed, parent_seed.reference_color, detection_param.CDiff)
+        circle_seed.seed_pixels, parent_seed.reference_color, detection_param.CDiff)
     similarity_gray_pixels_proportion = len(similarity_gray_pixels) / len(circle_seed.seed_pixels)
     gray_pixels_proportion = len(circle_seed.gray_pixels) / len(circle_seed.seed_pixels)
 

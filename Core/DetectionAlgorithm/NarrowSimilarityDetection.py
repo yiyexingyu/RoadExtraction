@@ -52,7 +52,7 @@ def narrow_similarity_detection(
         # 分析候选种子的外围条件
         # 条件二：相似灰度像素百分比 >= 30%
         similarity_gray_proportion = peripheral_condition.PSGP >= detection_param.SSGP
-        # 条件三： 道路像素比例比例 >= 1%
+        # 条件三： 道路像素(当前已经确认为道路的像素，防止交叉重合的圆形种子出现)比例比例 < 1%
         road_pixels_proportion = peripheral_condition.PRP >= detection_param.SRP
         # 条件选出最好的一个
         is_best_one = peripheral_condition.PRP > last_road_pixels_proportion

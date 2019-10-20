@@ -7,10 +7,15 @@
 # @Software: PyCharm
 
 
-class NoInitializeError(Exception):
+class NoInitializeError(RuntimeError):
 
-    def __init__(self):
-        Exception.__init__(self)
+    """ 进行道路跟踪检测时，没有进行初始化 """
+    def __init__(self, *args, **kwargs):
+        pass
+
+    @staticmethod
+    def __new__(cls, *args, **kwargs):
+        pass
 
 
 class RadiusOverBorder(Exception):

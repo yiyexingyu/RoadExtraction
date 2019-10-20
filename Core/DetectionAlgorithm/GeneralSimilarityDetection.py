@@ -30,6 +30,8 @@ def general_similarity_detection(
 
     for k in range(0, int(2 * pi / angle_interval)):
         current_angle = k * angle_interval + parent_circle_seed.direction
+        if current_angle > 2 * pi:
+            current_angle = current_angle % (2 * pi)
         pos_relative_angle = abs(current_angle - parent_circle_seed.direction)
         neg_relative_angle = abs(2 * pi - pos_relative_angle)
 
@@ -57,11 +59,15 @@ def general_similarity_detection(
 
         if similarity_gray_proportion and addition_gray_proportion:
             candidate_seeds.append(candidate_seed)
+            # print("k = ", k, "  angle = ", current_angle)
 
-    # 条件四：相邻候选种子之间的角度差 <= AI(angle interval)
+    # 条件四：相邻候选种子之间的角度差 <= AI(angle interval) 实际上只需要验证第一个和最后一个即可
+    if len(candidate_seeds) >= 3:
+        pos_relative_angle = abs(candidate_seeds[0].direction - candidate_seeds[-1].direction)
+        neg_relative_angle = abs(2 * pi - pos_relative_angle)
+        if min(pos_relative_angle, neg_relative_angle) > angle_interval:
+            # 这个条件需要改善！！！！！！！！！！！！！！！！！！！！！！！！
+            pop_index = 0 if len(candidate_seeds[0].gray_pixels) < len(candidate_seeds[-1].gray_pixels) else -1
+            candidate_seeds.pop(pop_index)
 
     return candidate_seeds
-
-
-if __name__ == '__main__':
-    """"""

@@ -7,11 +7,10 @@
 # @Software: PyCharm
 
 from math import pow
-from PyQt5.QtCore import QPoint
-from PyQt5.QtGui import QColor, QImage
-from .Pixels import SeedPixel
+from PyQt5.QtCore import QPoint, QRectF
+from PyQt5.QtGui import QColor, QImage, QPainterPath
+from DetectObjects.Pixels import SeedPixel
 from Core.Exception import RadiusOverBorder
-from .CircleSeed import CircleSeed
 
 
 class GrayPixelsSet:
@@ -59,9 +58,12 @@ class GrayPixelsSet:
         :param color_diff:
         :return:
         """
-        return [pixel for pixel in src_pixels if abs(pixel.r - parent_reference_color.red()) < color_diff and abs(
-            pixel.g - parent_reference_color.green()) < color_diff and abs(
-            pixel.b - parent_reference_color.blue()) < color_diff]
+        if color_diff:
+            return [pixel for pixel in src_pixels if abs(pixel.r() - parent_reference_color.red()) < color_diff and abs(
+                pixel.g() - parent_reference_color.green()) < color_diff and abs(
+                pixel.b() - parent_reference_color.blue()) < color_diff]
+        else:
+            return []
 
 
 def get_pixels_from(image: QImage, position: QPoint, radius):
@@ -77,28 +79,68 @@ def get_pixels_from(image: QImage, position: QPoint, radius):
 
     result = list()
     for y in range(position.y() - radius, position.y() + radius + 1):
-        for x in range(position.x() - radius, position.y() + radius + 1):
-            if pow(x - position.x(), 2) + pow(y - position.y(), 2) <= pow(radius, 2):
+        for x in range(position.x() - radius, position.x() + radius + 1):
+            if (pow(x - position.x(), 2) + pow(y - position.y(), 2)) <= pow(radius, 2):
                 pixel_color = image.pixelColor(x, y)
                 result.append(SeedPixel(QPoint(x, y), pixel_color))
-
     return result
 
 
-def calculate_reference_color_from(circle_seed: CircleSeed) -> QColor:
-    seed_pixels = circle_seed.seed_pixels
+def calculate_reference_color_from(circle_seed) -> QColor:
+    seed_pixels = circle_seed.gray_pixels
     if not seed_pixels:
         return GrayPixelsSet.standard_gray()
 
     sum_r, sum_g, sum_b = 0, 0, 0
     for seed_pixel in seed_pixels:
-        sum_r += seed_pixel.r
-        sum_g += seed_pixel.g
-        sum_b += seed_pixel.b
+        sum_r += seed_pixel.r()
+        sum_g += seed_pixel.g()
+        sum_b += seed_pixel.b()
 
     m = len(seed_pixels)
     return QColor(int(sum_r / m), int(sum_g / m), int(sum_b / m))
 
 
+def get_circle_seed_path(circle_seed) -> QPainterPath:
+    rect = QRectF(circle_seed.position.x() - circle_seed.radius, circle_seed.position.y() - circle_seed.radius,
+                  circle_seed.radius * 2, circle_seed.radius * 2)
+    seed_path = QPainterPath()
+    seed_path.arcMoveTo(rect, 0)
+    seed_path.arcTo(rect, 0, 360)
+    seed_path.closeSubpath()
+    return seed_path
+
+
+def create_circle_path(x_center: int, y_center: int, radius: int) -> QPainterPath:
+    rect = QRectF(x_center - radius, y_center - radius, radius * 2, radius * 2)
+    circle_path = QPainterPath()
+    circle_path.arcMoveTo(rect, 0)
+    circle_path.arcTo(rect, 0, 360)
+    circle_path.closeSubpath()
+    return circle_path
+
+
+def get_pixels_from_path(path: QPainterPath) -> list:
+    polygons = path.toFillPolygons()
+    result = []
+    for polygon in polygons:
+        for i in range(polygon.size()):
+            result.append(polygon.at(i))
+    return result
+
+
 if __name__ == '__main__':
-    """"""
+    xc, yc = 500, 433
+    radius = 20
+
+    pixels = []
+    for y in range(yc - radius, yc + radius + 1):
+        for x in range(xc - radius, xc + radius + 1):
+            if (pow(x - xc, 2) + pow(y - yc, 2)) <= pow(radius, 2):
+                pixels.append([x, y])
+
+    circle_path = create_circle_path(xc, yc, radius)
+    path_pixels = get_pixels_from_path(circle_path)
+
+    print("原像素数： ", len(pixels))
+    print("path像素数： ", len(path_pixels))

@@ -26,7 +26,7 @@ def gray_similarity_detection(
     """
 
     moving_distance = detection_param.MD if detection_param.MD > 0 else 2 * parent_circle_seed.radius
-    candidate_seeds, last_road_pixels_proportion = None, 0
+    candidate_seeds, last_similarity_gray_pixels_proportion = None, 0
 
     for k in range(0, int(2 * pi / angle_interval)):
         current_angle = k * angle_interval + parent_circle_seed.direction
@@ -51,14 +51,13 @@ def gray_similarity_detection(
 
         # 分析候选种子的外围条件
         # 条件二：灰度像素百分比 >= 90%
-        similarity_gray_proportion = peripheral_condition.PSGP >= detection_param.SSGP
-        # 条件三： 道路像素比例比例 >= 1%
-        road_pixels_proportion = peripheral_condition.PRP >= detection_param.SRP
+        similarity_gray_proportion = peripheral_condition.PSGP >= detection_param.SGP
+        # 条件三： 道路像素比例比例 <= 1%
+        road_pixels_proportion = peripheral_condition.PRP <= detection_param.SRP
         # 条件选出最好的一个
-        is_best_one = peripheral_condition.PRP > last_road_pixels_proportion
+        is_best_one = peripheral_condition.PSGP > last_similarity_gray_pixels_proportion
 
         if similarity_gray_proportion and road_pixels_proportion and is_best_one:
             candidate_seeds = candidate_seed
-            last_road_pixels_proportion = peripheral_condition.PRP
-
+            last_similarity_gray_pixels_proportion = peripheral_condition.PSGP
     return candidate_seeds
