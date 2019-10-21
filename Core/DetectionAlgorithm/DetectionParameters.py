@@ -85,11 +85,11 @@ class DetectionParameters:
     def generate_multi_directional_general_similarity_detection_parameters(radius: int):
         """多方向检测的一般相似性检测算法参数"""
         return DetectionParameters(
-            standard_similar_gray_proportion=0.7,
+            standard_similar_gray_proportion=0.7,  # 0.7
             addition_gray_proportion=0.7,
             standard_gray_proportion=None,
             standard_road_proportion=None,
-            color_difference=25,
+            color_difference=26,    # 25,
             effective_range_angle=3 * pi / 4,
             is_detect_neighbour=True,
             max_number_generated_seeds=NO_LIMIT,

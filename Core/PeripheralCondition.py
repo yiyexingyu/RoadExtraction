@@ -45,6 +45,13 @@ class PeripheralCondition:
     def direction(self):
         return self._direction
 
+    def __str__(self):
+        psgp = "PSPG = " + str(self.PSGP) + "\n"
+        pgp = "PGP = " + str(self.PGP) + "\n"
+        agp = "AGP = " + str(self.AGP) + "\n"
+        prp = "PRP = " + str(self.PRP) + "\n"
+        return "外围条件： \n" + psgp + pgp + agp + prp
+
 
 def calculate_peripheral_condition(
         circle_seed: CircleSeed, parent_seed: CircleSeed, detection_param: DetectionParameters) -> PeripheralCondition:
@@ -54,7 +61,7 @@ def calculate_peripheral_condition(
     gray_pixels_proportion = len(circle_seed.gray_pixels) / len(circle_seed.seed_pixels)
 
     # PRP ??????
-    road_pixels_proportion = 0.1
+    road_pixels_proportion = 0.
     addition_gray_proportion = similarity_gray_pixels_proportion - road_pixels_proportion
 
     peripheral_condition = PeripheralCondition(similarity_gray_pixels_proportion, gray_pixels_proportion,

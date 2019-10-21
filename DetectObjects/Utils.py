@@ -86,7 +86,7 @@ def get_pixels_from(image: QImage, position: QPoint, radius):
     return result
 
 
-def calculate_reference_color_from(circle_seed) -> QColor:
+def calculate_reference_color_of(circle_seed) -> QColor:
     seed_pixels = circle_seed.gray_pixels
     if not seed_pixels:
         return GrayPixelsSet.standard_gray()

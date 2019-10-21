@@ -6,8 +6,8 @@
 # @Project : RoadExtraction
 # @Software: PyCharm
 from PyQt5.QtCore import QPoint
-from PyQt5.QtGui import QColor, QPainterPath
-from .Utils import GrayPixelsSet, calculate_reference_color_from, get_circle_seed_path, get_pixels_from_path
+from PyQt5.QtGui import QColor, QPainterPath, QImage
+from .Utils import GrayPixelsSet, calculate_reference_color_of, get_pixels_from
 from Core.DetectionAlgorithm.DetectionParameters import DetectionParameters
 
 
@@ -29,7 +29,7 @@ class CircleSeed:
         self._seed_pixels = seed_pixels
         self._road_path = QPainterPath()
         self._gray_seed_pixels = GrayPixelsSet.get_gray_pixels_from(seed_pixels)
-        self._reference_color = calculate_reference_color_from(self)
+        self._reference_color = calculate_reference_color_of(self)
 
         self._general_strategy = "init"
         self._parent_seed = parent_seed
@@ -67,6 +67,11 @@ class CircleSeed:
             self.reference_color.green()) + "," + str(self._reference_color.blue()) + ")\n"
         return position_info + radius_info + direction_info + re_color_info
 
+    def init_circle_seed(self, image: QImage):
+        self._seed_pixels = get_pixels_from(image, self._position, self._radius)
+        self._gray_seed_pixels = GrayPixelsSet.get_gray_pixels_from(self._seed_pixels)
+        self._reference_color = calculate_reference_color_of(self)
+
     @property
     def child_seeds(self) -> ():
         return tuple(self._child_seeds)
@@ -80,6 +85,12 @@ class CircleSeed:
         if not isinstance(new_parent_seed, CircleSeed):
             return
         self._parent_seed = new_parent_seed
+
+    def set_position(self, position: QPoint):
+        self._position = position
+
+    def set_radius(self, radius: int):
+        self._radius = radius
 
     @property
     def position(self) -> QPoint:

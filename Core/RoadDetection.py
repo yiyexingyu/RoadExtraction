@@ -50,6 +50,7 @@ class RoadDetection(QObject):
         circle_seed = CircleSeed(position, radius, circle_seed_pixels, direction=direction)
         self._seed_list.append(circle_seed)
         self._next_circle_seed += 1
+        self._road_pixels.extend(circle_seed_pixels)
         print("初始种子\n", circle_seed)
         return circle_seed
 
@@ -123,6 +124,7 @@ class RoadDetection(QObject):
     def add_circle_seed(self, circle_seed: CircleSeed):
         if self._validation_road_pixels_proportion(circle_seed):
             self._seed_list.append(circle_seed)
+            self._road_pixels.extend(circle_seed.seed_pixels)
             self.circle_seeds_generated.emit(circle_seed)
 
     def _validation_road_pixels_proportion(self, circle_seed: CircleSeed, standard_proportion: float = 0.1):
@@ -132,11 +134,15 @@ class RoadDetection(QObject):
         :param standard_proportion: 待测种子与已测道路重合像素百分比阈值
         :return: bool 重合比例是否小于阈值
         """
-        for road_seed in reversed(self._seed_list):
-            intersected_pixels_num = circle_seed.intersected_pixel_num_with(road_seed)
-            road_intersected_proportion = intersected_pixels_num / len(circle_seed.seed_pixels)
-            if road_intersected_proportion > standard_proportion:
-                return False
+        intersected_pixels_num = len(list(set(circle_seed.seed_pixels) & set(self._road_pixels)))
+        road_intersected_proportion = intersected_pixels_num / len(circle_seed.seed_pixels)
+        if road_intersected_proportion > standard_proportion:
+            return False
+        # for road_seed in reversed(self._seed_list):
+        #     intersected_pixels_num = circle_seed.intersected_pixel_num_with(road_seed)
+        #     road_intersected_proportion = intersected_pixels_num / len(circle_seed.seed_pixels)
+        #     if road_intersected_proportion > standard_proportion:
+        #         return False
         return True
 
     def calculate_peripheral_condition_of(self, circle_seed):

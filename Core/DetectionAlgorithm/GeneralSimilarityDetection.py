@@ -51,6 +51,10 @@ def general_similarity_detection(
         # 计算候选种子的外围条件
         peripheral_condition = calculate_peripheral_condition(candidate_seed, parent_circle_seed, detection_param)
 
+        print("k = ", k, "  angle = ", current_angle, " parent(", + parent_circle_seed.position.x(),
+              parent_circle_seed.position.y(), ")")
+        print(peripheral_condition)
+
         # 分析候选种子的外围条件
         # 条件二：相似灰度像素百分比 >= 70%
         similarity_gray_proportion = peripheral_condition.PSGP >= detection_param.SSGP
