@@ -45,6 +45,7 @@ def single_direction_detection(
         seed_pixels = get_pixels_from(image, current_pos, parent_circle_seed.radius)
         # 创建候选种子
         candidate_seed = CircleSeed(current_pos, parent_circle_seed.radius, seed_pixels, current_angle)
+        candidate_seed.general_strategy = "single direction detect strategy"
 
         # 计算候选种子的外围条件
         peripheral_condition = calculate_peripheral_condition(candidate_seed, parent_circle_seed, detection_param)

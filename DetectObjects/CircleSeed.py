@@ -9,6 +9,7 @@ from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QColor, QPainterPath, QImage
 from .Utils import GrayPixelsSet, calculate_reference_color_of, get_pixels_from
 from Core.DetectionAlgorithm.DetectionParameters import DetectionParameters
+from Core.PeripheralCondition import PeripheralCondition
 
 
 class CircleSeed:
@@ -30,6 +31,7 @@ class CircleSeed:
         self._road_path = QPainterPath()
         self._gray_seed_pixels = GrayPixelsSet.get_gray_pixels_from(seed_pixels)
         self._reference_color = calculate_reference_color_of(self)
+        self._peripheral_condition = None   # type: PeripheralCondition
 
         self._general_strategy = "init"
         self._parent_seed = parent_seed
@@ -73,6 +75,15 @@ class CircleSeed:
         self._reference_color = calculate_reference_color_of(self)
 
     @property
+    def peripheral_condition(self) -> PeripheralCondition:
+        return self._peripheral_condition
+
+    @peripheral_condition.setter
+    def peripheral_condition(self, condition):
+        if isinstance(condition, PeripheralCondition):
+            self._peripheral_condition = condition
+
+    @property
     def child_seeds(self) -> ():
         return tuple(self._child_seeds)
 
@@ -91,6 +102,14 @@ class CircleSeed:
 
     def set_radius(self, radius: int):
         self._radius = radius
+
+    @property
+    def general_strategy(self):
+        return self._general_strategy
+
+    @general_strategy.setter
+    def general_strategy(self, strategy):
+        self._general_strategy = strategy
 
     @property
     def position(self) -> QPoint:

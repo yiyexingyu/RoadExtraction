@@ -128,7 +128,11 @@ class ShowResultLabel(QLabel):
         painter.setPen(QPen(Qt.red, 2, Qt.SolidLine))
 
         for index, circle_seed_item in enumerate(self._circle_seed_items):  # type: int, CircleSeedItem
-            painter.fillPath(circle_seed_item.path, Qt.red)
+
             if index == self._current_item_index and circle_seed_item.change_able:
                 painter.setPen(Qt.black)
                 painter.fillRect(circle_seed_item.resize_handel().adjusted(0, 0, -1, -1), Qt.black)
+            if index == self._current_item_index:
+                painter.fillPath(circle_seed_item.path, Qt.green)
+            else:
+                painter.fillPath(circle_seed_item.path, Qt.red)

@@ -54,6 +54,74 @@ class RoadDetection(QObject):
         print("初始种子\n", circle_seed)
         return circle_seed
 
+    def road_detection_one_step(self):
+        if len(self._seed_list) <= 0:
+            raise NoInitializeError()
+
+        road_detection_context = RoadDetectionContext()
+        if not self._next_circle_seed == len(self._seed_list):
+            current_circle_seed = self._seed_list[self._next_circle_seed]  # type: CircleSeed
+
+            self._next_circle_seed += 1
+
+            # 策略选择 单向/多向/指定多向 -- 默认多向
+            print("多向道路检测...")
+            detection_param = DetectionParameters.generate_multi_directional_general_similarity_detection_parameters(
+                current_circle_seed.radius)
+            road_detection_context.road_detection_strategy = GNSDetectionStrategy()
+            general_seeds = road_detection_context.road_detect(self._image, current_circle_seed, detection_param,
+                                                               self._angle_interval)
+            if general_seeds:
+                for general_seed in general_seeds:
+                    self.add_circle_seed(general_seed)
+            return True
+        return False
+
+            # # 多向策略不行，进行窄相似算法检测
+            # print("窄道路检测...")
+            # detection_param = DetectionParameters.generate_multi_directional_narrow_similarity_detection_parameters(
+            #     current_circle_seed.radius)
+            # road_detection_context.road_detection_strategy = NSDetectionStrategy()
+            # general_seed = road_detection_context.road_detect(self._image, current_circle_seed, detection_param,
+            #                                                   self._angle_interval)
+            # if general_seed:
+            #     self._seed_list.append(general_seed)
+            #     self.circle_seeds_generated.emit(current_circle_seed, [general_seed])
+            #     continue
+            #
+            # # 窄相似算法不行，进行灰度相似算法检测
+            # print("灰度道路检测...")
+            # detection_param = DetectionParameters.generate_multi_directional_gray_similarity_detection_parameters(
+            #     current_circle_seed.radius)
+            # road_detection_context.road_detection_strategy = GRSDetectionStrategy()
+            # general_seed = road_detection_context.road_detect(self._image, current_circle_seed, detection_param,
+            #                                                   self._angle_interval)
+            # if general_seed:
+            #     self._seed_list.append(general_seed)
+            #     self.circle_seeds_generated.emit(current_circle_seed, [general_seed])
+            #     continue
+
+            # 灰度相似算法不行， 进行跳跃相似算法测试
+            # print("跳跃道路检测...")
+            # detection_param = DetectionParameters.generate_multi_directional_jump_similarity_detection_parameters(
+            #     current_circle_seed.radius)
+            # road_detection_context.road_detection_strategy = JSDetectionStrategy()
+            # general_seed = road_detection_context.road_detect(self._image, current_circle_seed, detection_param,
+            #                                                   self._angle_interval)
+            # if general_seed:
+            #     self._seed_list.append(general_seed)
+            #     self.circle_seeds_generated.emit(current_circle_seed, [general_seed])
+            #     continue
+
+            # # 多向策略不行，进行单向检测
+            # detection_param = DetectionParameters.generate_single_directional_similarity_detection_parameters(
+            #     current_circle_seed.radius)
+            # general_seed = single_direction_detection(self._image, current_circle_seed, detection_param,
+            #                                           self._angle_interval)
+            # if general_seed:
+            #     self._seed_list.append(general_seed)
+            #     continue
+
     def road_detection(self):
         if len(self._seed_list) <= 0:
             raise NoInitializeError()

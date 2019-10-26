@@ -7,9 +7,10 @@
 # @Software: PyCharm
 
 import sys
+import threading
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QWidget, QApplication, QHBoxLayout, QTextBrowser
-from PyQt5.QtCore import pyqtSignal, QThread
+from PyQt5.QtCore import pyqtSignal, QThread, Qt
 from PyQt5.QtGui import QImage, QPixmap
 from Core.RoadDetection import RoadDetection, CircleSeed
 from Test.ShowResultLabel import ShowResultLabel
@@ -51,7 +52,15 @@ class ShowImageWidget(QWidget):
         self._image_label.circle_seed_clicked_signal.connect(self.show_selected_seed_info)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
-        self._image_label.keyPressEvent(event)
+        if event.key() == Qt.Key_Q and event.modifiers() & Qt.ControlModifier:
+            if self._road_detect_thread.isRunning():
+                self._road_detect_thread.pause()
+                event.accept()
+        elif event.key() == Qt.Key_A and event.modifiers() & Qt.ControlModifier:
+            self._road_detect_thread.resume()
+            event.accept()
+        else:
+            self._image_label.keyPressEvent(event)
 
     def about_to_road_detect(self, init_circle_seed: CircleSeed):
         init_circle_seed.init_circle_seed(self._image)
@@ -82,16 +91,36 @@ class RoadDetectThread(QThread):
     def __init__(self, road_detection: RoadDetection):
         super(RoadDetectThread, self).__init__()
         self._road_detection = road_detection
+        self.__flag = threading.Event()  # 用于暂停线程的标识
+        self.__flag.set()  # 设置为True
+        self.__running = threading.Event()  # 用于停止线程的标识
+        self.__running.set()  # 将running设置为True
 
     def run(self) -> None:
-        print("开始进行道路检测....")
-        self._road_detection.road_detection()
-        print("线程任务完成！")
-        self.road_detect_finished_signal.emit(self._road_detection)
+            print("开始进行道路检测....")
+            while self.__running.isSet():
+                self.__flag.wait()  # 为True时立即返回, 为False时阻塞直到内部的标识位为True后返回
+                if not self._road_detection.road_detection_one_step():
+                    break
+            print("线程任务完成！")
+            self.road_detect_finished_signal.emit(self._road_detection)
+
+    def pause(self):
+        self.__flag.clear()  # 设置为False, 让线程阻塞
+        print("pause")
+
+    def resume(self):
+        self.__flag.set()  # 设置为True, 让线程停止阻塞
+        print("resume")
+
+    def stop(self):
+        # self.__flag.set()  # 将线程从暂停状态恢复, 如果已经暂停的话（要是停止的话我就直接让他停止了，干嘛还要执行这一句语句啊，把这句注释了之后就没有滞后现象了。）
+        self.__running.clear()  # 设置为False
 
 
 def test_main():
-    image_path = "F:/RoadDetectionTestImg/1.jpg"
+    # 到目前结果最好的位置和半径：[(799, 635), 11] [(605, 426), 11]
+    image_path = "F:/RoadDetectionTestImg/4.png"
     image1 = QImage(image_path)
 
     app = QApplication(sys.argv)

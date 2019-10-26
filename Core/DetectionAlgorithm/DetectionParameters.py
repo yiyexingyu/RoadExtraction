@@ -60,6 +60,10 @@ class DetectionParameters:
     def ERA(self):
         return self._effective_range_angle
 
+    @ERA.setter
+    def ERA(self, era):
+        self._effective_range_angle = era
+
     @property
     def MD(self):
         return self._moving_distance
@@ -89,7 +93,7 @@ class DetectionParameters:
             addition_gray_proportion=0.7,
             standard_gray_proportion=None,
             standard_road_proportion=None,
-            color_difference=26,    # 25,
+            color_difference=44,    # 25,
             effective_range_angle=3 * pi / 4,
             is_detect_neighbour=True,
             max_number_generated_seeds=NO_LIMIT,

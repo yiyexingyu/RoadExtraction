@@ -12,6 +12,7 @@ from PyQt5.QtCore import QPoint
 from DetectObjects.CircleSeed import CircleSeed
 from DetectObjects.Utils import get_pixels_from
 from .DetectionParameters import DetectionParameters
+from DetectObjects.Utils import is_accept_color_diff
 from ..PeripheralCondition import calculate_peripheral_condition
 
 
@@ -25,6 +26,8 @@ def general_similarity_detection(
     :return: 有效的候选种子数组
     """
 
+    if parent_circle_seed.general_strategy == "init":
+        detection_param.ERA = 2 * pi
     moving_distance = detection_param.MD if detection_param.MD > 0 else 2 * parent_circle_seed.radius
     candidate_seeds = []
 
@@ -40,29 +43,54 @@ def general_similarity_detection(
             continue
 
         x_candidate = parent_circle_seed.position.x() + int(moving_distance * cos(current_angle))
-        y_candidate = parent_circle_seed.position.y() + int(moving_distance * sin(current_angle))
+        y_candidate = parent_circle_seed.position.y() - int(moving_distance * sin(current_angle))
         current_pos = QPoint(x_candidate, y_candidate)
 
         # 计算出候选种子的像素集
         seed_pixels = get_pixels_from(image, current_pos, parent_circle_seed.radius)
         # 创建候选种子
         candidate_seed = CircleSeed(current_pos, parent_circle_seed.radius, seed_pixels, current_angle)
+        candidate_seed.general_strategy = "general similarity detect strategy"
 
         # 计算候选种子的外围条件
         peripheral_condition = calculate_peripheral_condition(candidate_seed, parent_circle_seed, detection_param)
-
-        print("k = ", k, "  angle = ", current_angle, " parent(", + parent_circle_seed.position.x(),
-              parent_circle_seed.position.y(), ")")
-        print(peripheral_condition)
+        candidate_seed.peripheral_condition = peripheral_condition
+        # print("k = ", k, "  angle = ", current_angle, " parent(", + parent_circle_seed.position.x(),
+        #       parent_circle_seed.position.y(), ")")
+        # print(peripheral_condition)
 
         # 分析候选种子的外围条件
         # 条件二：相似灰度像素百分比 >= 70%
         similarity_gray_proportion = peripheral_condition.PSGP >= detection_param.SSGP
         # 条件三： 附加灰色像素比例 >= 70%
         addition_gray_proportion = peripheral_condition.AGP >= detection_param.AGP
+        # 条件六 参考色色差不能太大
+        is_color_diff_accept = is_accept_color_diff(candidate_seed.reference_color, 28)
 
-        if similarity_gray_proportion and addition_gray_proportion:
-            candidate_seeds.append(candidate_seed)
+        # 条件五： 筛选相邻的候选种子  # 可以按照一定的比重或策略！！！！！！！！！！！！
+        """
+        权重：
+            方向差： 注意范围是[0, pi] 最大是pi 方向差越小越好
+            相似灰度像素比例：
+            灰度像素比例：
+            色差：候选种子自身像素的色差，越小越好
+            难点： 方向差和色差的定义、计算和归一化
+        """
+        weights = {"direction": 0.1, "similarity_gray_proportion": 0.4, "gray_proportion": 0.4, "color_diff": 0.1}
+
+        if similarity_gray_proportion and addition_gray_proportion and is_color_diff_accept:
+            flag = True
+            for index, candidate_circle_seed in enumerate(candidate_seeds):
+                intersected_pixels_num = len(list(set(candidate_circle_seed.seed_pixels) & set(candidate_seed.seed_pixels)))
+                road_pixels_proportion = intersected_pixels_num / len(candidate_circle_seed.seed_pixels)
+                if road_pixels_proportion > 0.4:
+                    if peripheral_condition.PSGP >= candidate_circle_seed.peripheral_condition.PSGP:
+                        candidate_seeds.insert(index, candidate_seed)
+                        candidate_seeds.remove(candidate_circle_seed)
+                        flag = False
+                        break
+            if flag:
+                candidate_seeds.append(candidate_seed)
             # print("k = ", k, "  angle = ", current_angle)
 
     # 条件四：相邻候选种子之间的角度差 <= AI(angle interval) 实际上只需要验证第一个和最后一个即可
@@ -73,5 +101,4 @@ def general_similarity_detection(
             # 这个条件需要改善！！！！！！！！！！！！！！！！！！！！！！！！
             pop_index = 0 if len(candidate_seeds[0].gray_pixels) < len(candidate_seeds[-1].gray_pixels) else -1
             candidate_seeds.pop(pop_index)
-
     return candidate_seeds
