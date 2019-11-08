@@ -38,27 +38,27 @@ def narrow_similarity_detection(
             continue
 
         x_candidate = parent_circle_seed.position.x() + int(moving_distance * cos(current_angle))
-        y_candidate = parent_circle_seed.position.y() + int(moving_distance * sin(current_angle))
+        y_candidate = parent_circle_seed.position.y() - int(moving_distance * sin(current_angle))
         current_pos = QPoint(x_candidate, y_candidate)
 
         # 计算出候选种子的像素集
         seed_pixels = get_pixels_from(image, current_pos, parent_circle_seed.radius)
         # 创建候选种子
         candidate_seed = CircleSeed(current_pos, parent_circle_seed.radius, seed_pixels, current_angle)
+        candidate_seed.general_strategy = "narrow similarity detect strategy"
 
         # 计算候选种子的外围条件
         peripheral_condition = calculate_peripheral_condition(candidate_seed, parent_circle_seed, detection_param)
+        candidate_seed.peripheral_condition = peripheral_condition
 
         # 分析候选种子的外围条件
         # 条件二：相似灰度像素百分比 >= 30%
         similarity_gray_proportion = peripheral_condition.PSGP >= detection_param.SSGP
-        # 条件三： 道路像素(当前已经确认为道路的像素，防止交叉重合的圆形种子出现)比例比例 < 1%
-        road_pixels_proportion = peripheral_condition.PRP >= detection_param.SRP
         # 条件选出最好的一个
-        is_best_one = peripheral_condition.PRP > last_road_pixels_proportion
+        is_best_one = peripheral_condition.PSGP > last_road_pixels_proportion
 
-        if similarity_gray_proportion and road_pixels_proportion and is_best_one:
+        if similarity_gray_proportion and is_best_one:
             candidate_seeds = candidate_seed
-            last_road_pixels_proportion = peripheral_condition.PRP
+            last_road_pixels_proportion = peripheral_condition.PSGP
 
     return candidate_seeds

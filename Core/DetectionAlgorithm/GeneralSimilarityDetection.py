@@ -26,8 +26,8 @@ def general_similarity_detection(
     :return: 有效的候选种子数组
     """
 
-    if parent_circle_seed.general_strategy == "init":
-        detection_param.ERA = 2 * pi
+    # if parent_circle_seed.general_strategy == "init":
+    detection_param.ERA = 2 * pi
     moving_distance = detection_param.MD if detection_param.MD > 0 else 2 * parent_circle_seed.radius
     candidate_seeds = []
 
@@ -45,6 +45,10 @@ def general_similarity_detection(
         x_candidate = parent_circle_seed.position.x() + int(moving_distance * cos(current_angle))
         y_candidate = parent_circle_seed.position.y() - int(moving_distance * sin(current_angle))
         current_pos = QPoint(x_candidate, y_candidate)
+
+        # 检测算法超出图片范围
+        if not (0 < x_candidate < image.width()) or not (0 < y_candidate < image.height()):
+            continue
 
         # 计算出候选种子的像素集
         seed_pixels = get_pixels_from(image, current_pos, parent_circle_seed.radius)

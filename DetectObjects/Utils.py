@@ -6,7 +6,9 @@
 # @Project : RoadExtraction
 # @Software: PyCharm
 
-from math import pow, sqrt
+from math import pow, sqrt, pi
+import numpy as np
+import cv2
 from PyQt5.QtCore import QPoint, QRectF
 from PyQt5.QtGui import QColor, QImage, QPainterPath
 from DetectObjects.Pixels import SeedPixel
@@ -38,8 +40,15 @@ class GrayPixelsSet:
 
     @staticmethod
     def is_gray_of_rgb(r: int, g: int, b: int):
-        res1 = GrayPixelsSet.standard_gay_min < r, g, b < GrayPixelsSet.standard_gray_max
-        res2 = abs(r - g), abs(r - b), abs(g - b) <= GrayPixelsSet.gray_difference
+        res11 = GrayPixelsSet.standard_gay_min < r < GrayPixelsSet.standard_gray_max
+        res12 = GrayPixelsSet.standard_gay_min < g < GrayPixelsSet.standard_gray_max
+        res13 = GrayPixelsSet.standard_gay_min < b < GrayPixelsSet.standard_gray_max
+        res1 = (res11, res12, res13)
+
+        res21 = abs(r - g) <= GrayPixelsSet.gray_difference
+        res22 = abs(r - b) <= GrayPixelsSet.gray_difference
+        res23 = abs(g - b) <= GrayPixelsSet.gray_difference
+        res2 = (res21, res22, res23)
         return all(res1) and all(res2)
 
     @staticmethod
@@ -60,32 +69,25 @@ class GrayPixelsSet:
         """
 
         def colour_distance1(rgb_1: QColor, rgb_2: QColor):
-            R_1, G_1, B_1 = rgb_1.red(), rgb_1.green(), rgb_1.blue()
-            R_2, G_2, B_2 = rgb_2.red(), rgb_2.green(), rgb_2.blue()
-            rmean = (R_1 + R_2) / 2
-            R = R_1 - R_2
-            G = G_1 - G_2
-            B = B_1 - B_2
-            return sqrt((2 + rmean / 256) * (R ** 2) + 4 * (G ** 2) + (2 + (255 - rmean) / 256) * (B ** 2))
+            r_1, g_1, b_1 = rgb_1.red(), rgb_1.green(), rgb_1.blue()
+            r_2, g_2, b_2 = rgb_2.red(), rgb_2.green(), rgb_2.blue()
+            rmean = (r_1 + r_2) / 2
+            r = r_1 - r_2
+            g = g_1 - g_2
+            b = b_1 - b_2
+            return sqrt((2 + rmean / 256) * (r ** 2) + 4 * (g ** 2) + (2 + (255 - rmean) / 256) * (b ** 2))
 
         def colour_distance2(rgb_1: QColor, rgb_2: QColor):
-            R_1, G_1, B_1 = rgb_1.red(), rgb_1.green(), rgb_1.blue()
-            R_2, G_2, B_2 = rgb_2.red(), rgb_2.green(), rgb_2.blue()
-            return sqrt((R_1 - R_2)**2 + (G_1 - G_2)**2 + (B_1 - B_2)**2)
+            r_1, g_1, b_1 = rgb_1.red(), rgb_1.green(), rgb_1.blue()
+            r_2, g_2, b_2 = rgb_2.red(), rgb_2.green(), rgb_2.blue()
+            return sqrt((r_1 - r_2) ** 2 + (g_1 - g_2) ** 2 + (b_1 - b_2) ** 2)
 
         result = []
         # 颜色相似度计算方法1
         if color_diff:
-            result = [pixel for pixel in src_pixels if colour_distance2(pixel.color, parent_reference_color) <= color_diff]
+            result = [pixel for pixel in src_pixels if
+                      colour_distance2(pixel.color, parent_reference_color) <= color_diff]
         return result
-
-        # 颜色相似度计算方法2
-        # if color_diff:
-        #     return [pixel for pixel in src_pixels if abs(pixel.r() - parent_reference_color.red()) < color_diff and abs(
-        #         pixel.g() - parent_reference_color.green()) < color_diff and abs(
-        #         pixel.b() - parent_reference_color.blue()) < color_diff]
-        # else:
-        #     return []
 
 
 def get_pixels_from(image: QImage, position: QPoint, radius):
@@ -139,6 +141,20 @@ def get_circle_seed_path(circle_seed) -> QPainterPath:
     return seed_path
 
 
+def adjust_angle(src_angle: float) -> float:
+    while src_angle < 0.:
+        src_angle = 2 * pi + src_angle
+
+    while src_angle > 2 * pi:
+        src_angle = src_angle - 2 * pi
+
+    return src_angle
+
+
+def calculate_spectral_distance(spectral_info_vector1, spectral_info_vector2):
+    return np.linalg.norm(np.subtract(spectral_info_vector1, spectral_info_vector2))
+
+
 def create_circle_path(x_center: int, y_center: int, radius: int) -> QPainterPath:
     rect = QRectF(x_center - radius, y_center - radius, radius * 2, radius * 2)
     circle_path = QPainterPath()
@@ -163,42 +179,63 @@ def combination22(src_list: [tuple, list]) -> list:
     for i in range(0, list_len):
         for j in range(i + 1, list_len):
             result.append((src_list[i], src_list[j]))
-
     return result
 
 
+def qimage2cvmat(image: QImage, image_format=QImage.Format_RGB32, channel=4) -> np.ndarray:
+    """Converts a QImage into an opencv MAT format"""
+
+    incoming_image = image.convertToFormat(image_format)
+
+    width = incoming_image.width()
+    height = incoming_image.height()
+
+    ptr = incoming_image.bits()
+    ptr.setsize(incoming_image.byteCount())
+    arr = np.array(ptr).reshape((height, width, channel))  # Copies the data
+    return arr
+
+
+def cvmat2qimage(cv_image: np.ndarray):
+    shape = cv_image.shape  # type: tuple
+    if len(shape) == 2:
+        image = cv2.cvtColor(cv_image, cv2.COLOR_GRAY2RGB)  # type: np.ndarray
+    elif shape[2] == 4:
+        image = cv2.cvtColor(cv_image, cv2.COLOR_BGRA2RGB)  # type: np.ndarray
+    else:
+        image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)   # type: np.ndarray
+    return QImage(image.tobytes(), image.shape[0], image.shape[1], QImage.Format_RGB888)
+
+
 if __name__ == '__main__':
-    xc, yc = 500, 433
-    radius = 20
 
-    pixels = []
-    for y in range(yc - radius, yc + radius + 1):
-        for x in range(xc - radius, xc + radius + 1):
-            if (pow(x - xc, 2) + pow(y - yc, 2)) <= pow(radius, 2):
-                pixels.append([x, y])
+    class M:
+        def __init__(self, m):
+            self.m = m
 
-    circle_path = create_circle_path(xc, yc, radius)
-    path_pixels = get_pixels_from_path(circle_path)
+        def __lt__(self, other):
+            print("call lt")
+            return self.m < other.m
 
-    # print("原像素数： ", len(pixels))
-    # print("path像素数： ", len(path_pixels))
+        def __gt__(self, other):
+            print("call gt")
+            return self.m > other.m
 
-    test_data = [1, 2, 3, 4, 5]
-    combination_ = combination22(test_data)
-    print(combination_)
+        def __eq__(self, other):
+            print("call eq")
+            return self.m == other.m
 
-    import time, random
-    list2 = list(range(10000))
-    list1 = list(range(10000000))
-    test_num = random.randint(100, 1000000)
+        def __str__(self):
+            print("call str: ", end=" ")
+            return str(self.m)
 
-    ts = time.time()
-    t = test_data in list1
-    dt1 = time.time() - ts
+    m1 = M(4)
+    m2 = M(3)
+    m = [m1, m2, M(2), M(10)]
+    n = sorted(m)
 
-    ts = time.time()
-    t = test_data in list2
-    dt2 = time.time() - ts
+    for i in m:
+        print(i)
 
-    print("dt1: ", dt1)
-    print("dt2: ", dt2)
+    for i in n:
+        print(i)

@@ -27,6 +27,11 @@ class RoadDetectionContext:
             return []
         return self._road_detection_strategy.road_detect(image, parent_seed, detection_param, angle_interval)
 
+    def analysis_peripheral_condition(self, candidate_seeds, detection_param: DetectionParameters):
+        if not isinstance(self._road_detection_strategy, AbstractDetectionStrategy):
+            return []
+        return self._road_detection_strategy.analysis_peripheral_condition(candidate_seeds, detection_param)
+
     @property
     def road_detection_strategy(self) -> AbstractDetectionStrategy:
         return self._road_detection_strategy

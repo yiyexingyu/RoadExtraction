@@ -20,3 +20,6 @@ class JSDetectionStrategy(AbstractDetectionStrategy):
 
     def road_detect(self, image: QImage, parent_seed: CircleSeed, detection_param: DetectionParameters, angle_interval):
         return jump_similarity_detection(image, parent_seed, detection_param, angle_interval)
+
+    def analysis_peripheral_condition(self, candidate_seeds: list, detection_param: DetectionParameters):
+        """TODO"""

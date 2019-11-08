@@ -24,26 +24,55 @@ class PeripheralCondition:
         self._addition_gray_proportion = addition_gray_proportion
         self._road_pixels_proportion = road_pixels_proportion
         self._direction = direction
+        self._spectral_distance = 0
+
+    @property
+    def spectral_distance(self):
+        return self._spectral_distance
+
+    @spectral_distance.setter
+    def spectral_distance(self, distance):
+        self._spectral_distance = distance
 
     @property
     def PSGP(self):
         return self._similarity_gray_pixels_proportion
 
+    @PSGP.setter
+    def PSGP(self, psgp: float):
+        self._similarity_gray_pixels_proportion = psgp
+
     @property
     def PGP(self):
         return self._gray_pixels_proportion
+
+    @PGP.setter
+    def PGP(self, pgp: float):
+        self._gray_pixels_proportion = pgp
 
     @property
     def AGP(self):
         return self._addition_gray_proportion
 
+    @AGP.setter
+    def AGP(self, agp: float):
+        self._addition_gray_proportion = agp
+
     @property
     def PRP(self):
         return self._road_pixels_proportion
 
+    @PRP.setter
+    def PRP(self, prp: float):
+        self._road_pixels_proportion = prp
+
     @property
     def direction(self):
         return self._direction
+
+    @direction.setter
+    def direction(self, _direction):
+        self._direction = _direction
 
     def __str__(self):
         psgp = "PSPG = " + str(self.PSGP) + "\n"
@@ -60,10 +89,6 @@ def calculate_peripheral_condition(
     similarity_gray_pixels_proportion = len(similarity_gray_pixels) / len(circle_seed.seed_pixels)
     gray_pixels_proportion = len(circle_seed.gray_pixels) / len(circle_seed.seed_pixels)
 
-    # PRP ??????
-    road_pixels_proportion = 0.
-    addition_gray_proportion = similarity_gray_pixels_proportion - road_pixels_proportion
-
     peripheral_condition = PeripheralCondition(similarity_gray_pixels_proportion, gray_pixels_proportion,
-                                               addition_gray_proportion, road_pixels_proportion, parent_seed.direction)
+                                               0, 0, parent_seed.direction)
     return peripheral_condition

@@ -5,11 +5,17 @@
 # @File    : CircleSeed.py
 # @Project : RoadExtraction
 # @Software: PyCharm
+
+from math import sqrt
+import cv2
+import numpy as np
 from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QColor, QPainterPath, QImage
-from .Utils import GrayPixelsSet, calculate_reference_color_of, get_pixels_from
+from .Utils import GrayPixelsSet, calculate_reference_color_of, get_pixels_from, calculate_spectral_distance
 from Core.DetectionAlgorithm.DetectionParameters import DetectionParameters
 from Core.PeripheralCondition import PeripheralCondition
+from Core.DetectionStrategy.AbstractDetectionStrategy import DetectionStrategy
+from Core.GrayLevelCooccurrenceMatrix import GrayLCM, get_circle_spectral_vector
 
 
 class CircleSeed:
@@ -31,10 +37,14 @@ class CircleSeed:
         self._road_path = QPainterPath()
         self._gray_seed_pixels = GrayPixelsSet.get_gray_pixels_from(seed_pixels)
         self._reference_color = calculate_reference_color_of(self)
-        self._peripheral_condition = None   # type: PeripheralCondition
-
-        self._general_strategy = "init"
         self._parent_seed = parent_seed
+
+        self._peripheral_condition = None  # type: PeripheralCondition
+        self._spectral_distance = 255
+        self._spectral_info_vector = self._calculate_spectral_info_vector()
+        self._calculate_spectral_distance()
+
+        self._general_strategy = DetectionStrategy.Initialization
         self._child_seeds = []
 
     def construct_road_path(self, detection_param: DetectionParameters):
@@ -42,6 +52,44 @@ class CircleSeed:
 
     def intersected_road_path_with(self, other):
         """和其他种子中道路部分的交集"""
+
+    def _calculate_texture_info_vector(self):
+        """计算种子的纹理特征"""
+        if not self._seed_pixels:
+            return None
+
+        # 计算对比度
+
+    def _calculate_spectral_info_vector(self):
+        """计算种子的光谱特征"""
+        if not self._seed_pixels:
+            return None
+        sr, sg, sb = 0, 0, 0
+        for seed_pixel in self._seed_pixels:
+            sr += seed_pixel.r()
+            sg += seed_pixel.g()
+            sb += seed_pixel.b()
+
+        num_pixels = len(self._seed_pixels)
+        xr = sr / num_pixels
+        xg = sg / num_pixels
+        xb = sb / num_pixels
+
+        sr, sg, sb = 0, 0, 0
+        for seed_pixel in self._seed_pixels:
+            sr += (seed_pixel.r() - xr) ** 2
+            sg += (seed_pixel.g() - xg) ** 2
+            sb += (seed_pixel.b() - xb) ** 2
+        sdr = sqrt(sr / num_pixels)
+        sdg = sqrt(sg / num_pixels)
+        sdb = sqrt(sb / num_pixels)
+
+        return [xr, xg, xb, sdr, sdg, sdb]
+
+    def _calculate_spectral_distance(self):
+        if self._parent_seed is not None:
+            self._spectral_distance = calculate_spectral_distance(
+                self._spectral_info_vector, self._parent_seed.spectral_info_vector)
 
     def intersected_with(self, road_seed):
         road_pixels = road_seed.seed_pixels
@@ -67,12 +115,18 @@ class CircleSeed:
         direction_info = "direction=" + str(self._direction) + "\n"
         re_color_info = "reference color(" + str(self.reference_color.red()) + "," + str(
             self.reference_color.green()) + "," + str(self._reference_color.blue()) + ")\n"
-        return position_info + radius_info + direction_info + re_color_info
+        general_strategy = "general_strategy: " + self.general_strategy.value + "\n"
+        return position_info + radius_info + direction_info + re_color_info + general_strategy
 
     def init_circle_seed(self, image: QImage):
         self._seed_pixels = get_pixels_from(image, self._position, self._radius)
         self._gray_seed_pixels = GrayPixelsSet.get_gray_pixels_from(self._seed_pixels)
         self._reference_color = calculate_reference_color_of(self)
+        self._spectral_info_vector = self._calculate_spectral_info_vector()
+        self._calculate_spectral_distance()
+
+    def set_position(self, position: QPoint):
+        self._position = position
 
     @property
     def peripheral_condition(self) -> PeripheralCondition:
@@ -97,35 +151,43 @@ class CircleSeed:
             return
         self._parent_seed = new_parent_seed
 
-    def set_position(self, position: QPoint):
-        self._position = position
-
     def set_radius(self, radius: int):
         self._radius = radius
 
     @property
-    def general_strategy(self):
+    def spectral_distance(self):
+        return self._spectral_distance
+
+    def __lt__(self, other):
+        return self._spectral_distance < other.spectral_distance
+
+    @property
+    def spectral_info_vector(self):
+        return self._spectral_info_vector
+
+    @property
+    def general_strategy(self) -> DetectionStrategy:
         return self._general_strategy
 
     @general_strategy.setter
-    def general_strategy(self, strategy):
+    def general_strategy(self, strategy: DetectionStrategy):
         self._general_strategy = strategy
 
     @property
     def position(self) -> QPoint:
         return self._position
 
-    @position.setter
-    def position(self, new_position: QPoint):
+    def set_position(self, image: QImage, new_position: QPoint):
         self._position = new_position
+        self.init_circle_seed(image)
 
     @property
     def radius(self) -> int:
         return self._radius
 
-    @radius.setter
-    def radius(self, new_radius: int):
+    def set_radius(self, image: QImage, new_radius: int):
         self._radius = new_radius
+        self.init_circle_seed(image)
 
     @property
     def direction(self) -> float:
@@ -146,3 +208,161 @@ class CircleSeed:
     @property
     def gray_pixels(self):
         return self._gray_seed_pixels
+
+
+class CircleSeedNp:
+    """
+    基于numpy数组的圆形探测种子，检测跟踪道路的主对象。这个类定义了一个圆形种子（circle seed)的所有必要属性和行为
+        :param position: 圆形种子圆心相对于源图片左上角的位置
+        :type position: list
+        :param radius: 圆形种子的半径
+        :type radius: int
+        :param generate_strategy: 种子产生的策略
+        :type generate_strategy: DetectionStrategy
+        :param image: 源图片的np矩阵，RGB格式
+        :type image: np.ndarray
+        :param direction: 圆形种子的方向，范围：[0, 2*pi)
+        :type direction: float
+        :param parent_seed: 圆形种子的方向
+        :type CircleSeedNp
+    """
+
+    def __init__(self, position, radius, generate_strategy, image=None, direction=0, parent_seed=None):
+        """
+        基于numpy数组的圆形探测种子，检测跟踪道路的主对象
+        :param position: 圆形种子圆心相对于源图片左上角的位置
+        :type position: list
+        :param radius: 圆形种子的半径
+        :type radius: int
+        :param generate_strategy: 种子产生的策略
+        :type generate_strategy: DetectionStrategy
+        :param image: 源图片的np矩阵，RGB格式
+        :type image: np.ndarray
+        :param direction: 圆形种子的方向，范围：[0, 2*pi)
+        :type direction: float
+        :param parent_seed: 圆形种子的方向
+        :type CircleSeedNp
+        """
+        # 圆形种子四元素
+        self._position = position
+        self._radius = radius
+        self._direction = direction
+        self._seed_pixels = np.zeros((radius * 2, radius * 2, 3))
+
+        # 圆形种子附加信息
+        self._parent_seed = parent_seed
+        self._child_seeds = []
+        self._generate_strategy = generate_strategy
+
+        # 圆形种子的特征信息: 光谱特征向量和纹理特征向量
+        self._spectral_feature_vector = []
+        self._texture_feature_vector = []
+
+        if image:
+            self.initialization(image)
+
+    def initialization(self, image: np.ndarray):
+        assert image.ndim >= 3
+        # 从源图片中截取出圆形种子范围内的像素
+        # 裁剪坐标为[y0:y1, x0:x1]
+        y0, y1 = self._position[1] - self._radius, self._position[1] + self._radius
+        x0, x1 = self._position[0] - self._radius, self._position[0] + self._radius
+        self._seed_pixels = image[y0: y1, x0: x1]
+        seed_pixels_gray = cv2.cvtColor(self._seed_pixels, cv2.COLOR_RGB2GRAY)
+
+        # 圆形提取模板矩阵
+        temp_img = - np.ones((self._radius * 2, self._radius * 2)) * 256
+        temp_img = cv2.circle(temp_img, (self.radius - 1, self.radius - 1), self._radius, 0, -1)
+
+        # 进行提取 为了避免有些值为0的像素可用-256的矩阵进行相加
+        self._seed_pixels[:, :, 0] = np.add(self._seed_pixels[:, :, 0], temp_img[:, :, 0])
+        self._seed_pixels[:, :, 1] = np.add(self._seed_pixels[:, :, 1], temp_img[:, :, 0])
+        self._seed_pixels[:, :, 2] = np.add(self._seed_pixels[:, :, 2], temp_img[:, :, 0])
+        seed_pixels_gray += temp_img
+        # self._seed_pixels[self._seed_pixels < 0] = -1
+
+        # 计算种子的特征信息
+        self._spectral_feature_vector = get_circle_spectral_vector(self._seed_pixels)
+        self._texture_feature_vector = GrayLCM.get_road_texture_vector(seed_pixels_gray)
+
+    def set_position(self, position: list, image: np.ndarray):
+        self._position = position
+        self.initialization(image)
+
+    def set_radius(self, radius: int, image: np.ndarray):
+        self._radius = radius
+        self.initialization(image)
+
+    def get_pixels_position(self):
+        x_axis = np.arange(self._position[0] - self._radius, self._position[0] + self._radius, 1, np.int)
+        y_axis = np.arange(self._position[1] - self._radius, self._position[1] + self._radius, 1, np.int)
+        pixels_position = np.array(np.meshgrid(*[x_axis, y_axis])).T
+
+        temp_mod = self._seed_pixels[:, :, 0]
+        return pixels_position[temp_mod < 0]
+
+    def __str__(self):
+        position_info = "position(" + str(self._position[0]) + "," + str(self._position[1]) + ")\n"
+        radius_info = "radius=" + str(self._radius) + "\n"
+        direction_info = "direction=" + str(self._direction) + "\n"
+        general_strategy = "generate_strategy: " + str(self._generate_strategy.value) + "\n"
+        spectral_distance = "spectral_distance: " + str(self.spectral_distance) + "\n"
+        texture_distance = "texture_distance: " + str(self.texture_distance) + "\n"
+        return position_info + radius_info + direction_info + general_strategy + spectral_distance + texture_distance
+
+    @property
+    def spectral_distance(self):
+        if self._parent_seed:
+            return np.linalg.norm(np.subtract(self._spectral_feature_vector, self._parent_seed.spectral_feature_vector))
+        return 0.
+
+    @property
+    def texture_distance(self):
+        if self._parent_seed:
+            return np.linalg.norm(np.subtract(self._texture_feature_vector, self._parent_seed.texture_feature_vector))
+        return 0.
+
+    @property
+    def position(self):
+        return self._position
+
+    @property
+    def radius(self):
+        return self._radius
+
+    @property
+    def direction(self):
+        return self._direction
+
+    @direction.setter
+    def direction(self, new_direction):
+        self._direction = new_direction
+
+    @property
+    def seed_pixels(self) -> np.ndarray:
+        return self._seed_pixels
+
+    @property
+    def parent_seed(self):
+        return self._parent_seed
+
+    @parent_seed.setter
+    def parent_seed(self, parent):
+        self._parent_seed = parent
+
+    @property
+    def spectral_feature_vector(self):
+        return self._spectral_feature_vector
+
+    @property
+    def texture_feature_vector(self):
+        return self._texture_feature_vector
+
+    @property
+    def generate_strategy(self) -> DetectionStrategy:
+        return self._generate_strategy
+
+    @generate_strategy.setter
+    def generate_strategy(self, strategy: DetectionStrategy):
+        if isinstance(strategy, DetectionStrategy):
+            self._generate_strategy = strategy

@@ -7,7 +7,7 @@
 # @Software: PyCharm
 
 from enum import IntEnum
-from PyQt5.QtGui import QColor, QPainterPath
+from PyQt5.QtGui import QColor, QPainterPath, QImage
 from PyQt5.QtCore import QSizeF, QRect, QPoint, Qt, QRectF, pyqtSignal, QObject
 
 
@@ -22,14 +22,15 @@ class Type(IntEnum):
 
 class CircleSeedItem(QObject):
 
-    position_changed_signal = pyqtSignal(QPoint)
-    radius_changed_signal = pyqtSignal(int)
+    position_changed_signal = pyqtSignal(QImage, QPoint)
+    radius_changed_signal = pyqtSignal(QImage, int)
     min_size = QSizeF(10, 10)
 
-    def __init__(self,  center_pos: QPoint, radius, shape_type=Type.Circle, color: QColor = Qt.red, can_change=False):
+    def __init__(self, image: QImage, center_pos: QPoint, radius, shape_type=Type.Circle, color: QColor = Qt.red, can_change=False):
         super(CircleSeedItem, self).__init__()
         self.__type = shape_type
         # self.__path = path
+        self._image = image
         self.__center_pos = center_pos
         self.__radius = radius
         self.__color = color
@@ -75,7 +76,7 @@ class CircleSeedItem(QObject):
     @radius.setter
     def radius(self, new_radius):
         self.__radius = new_radius if new_radius > 5 else 5
-        self.radius_changed_signal.emit(new_radius)
+        self.radius_changed_signal.emit(self._image, new_radius)
 
     @property
     def center_pos(self) -> QPoint:
@@ -84,7 +85,7 @@ class CircleSeedItem(QObject):
     @center_pos.setter
     def center_pos(self, new_pos):
         self.__center_pos = new_pos
-        self.position_changed_signal.emit(new_pos)
+        self.position_changed_signal.emit(self._image, new_pos)
 
     @property
     def change_able(self):

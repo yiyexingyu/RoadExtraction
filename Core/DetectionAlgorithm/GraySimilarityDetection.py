@@ -38,26 +38,30 @@ def gray_similarity_detection(
             continue
 
         x_candidate = parent_circle_seed.position.x() + int(moving_distance * cos(current_angle))
-        y_candidate = parent_circle_seed.position.y() + int(moving_distance * sin(current_angle))
+        y_candidate = parent_circle_seed.position.y() - int(moving_distance * sin(current_angle))
         current_pos = QPoint(x_candidate, y_candidate)
+
+        # 检测算法超出图片范围
+        if not (0 < x_candidate < image.width()) or not (0 < y_candidate < image.height()):
+            continue
 
         # 计算出候选种子的像素集
         seed_pixels = get_pixels_from(image, current_pos, parent_circle_seed.radius)
         # 创建候选种子
         candidate_seed = CircleSeed(current_pos, parent_circle_seed.radius, seed_pixels, current_angle)
+        candidate_seed.general_strategy = "gray direction detect strategy"
 
         # 计算候选种子的外围条件
         peripheral_condition = calculate_peripheral_condition(candidate_seed, parent_circle_seed, detection_param)
+        candidate_seed.peripheral_condition = peripheral_condition
 
         # 分析候选种子的外围条件
         # 条件二：灰度像素百分比 >= 90%
         similarity_gray_proportion = peripheral_condition.PSGP >= detection_param.SGP
-        # 条件三： 道路像素比例比例 <= 1%
-        road_pixels_proportion = peripheral_condition.PRP <= detection_param.SRP
         # 条件选出最好的一个
         is_best_one = peripheral_condition.PSGP > last_similarity_gray_pixels_proportion
 
-        if similarity_gray_proportion and road_pixels_proportion and is_best_one:
+        if similarity_gray_proportion and is_best_one:
             candidate_seeds = candidate_seed
             last_similarity_gray_pixels_proportion = peripheral_condition.PSGP
     return candidate_seeds

@@ -6,11 +6,11 @@
 # @Project : RoadExtraction
 # @Software: PyCharm
 
-from math import pi
+from enum import Enum
 from abc import abstractmethod
 from PyQt5.QtGui import QImage
-from DetectObjects.CircleSeed import CircleSeed
-from ..DetectionAlgorithm.DetectionParameters import DetectionParameters
+# from DetectObjects.CircleSeed import CircleSeed
+# from ..DetectionAlgorithm.DetectionParameters import DetectionParameters
 
 
 class AbstractDetectionStrategy:
@@ -19,5 +19,23 @@ class AbstractDetectionStrategy:
         """TODO"""
 
     @abstractmethod
-    def road_detect(self, image: QImage, parent_seed: CircleSeed, detection_param: DetectionParameters, angle_interval):
+    def road_detect(self, image: QImage, parent_seed, detection_param, angle_interval):
         raise NotImplementedError
+
+    @abstractmethod
+    def analysis_peripheral_condition(self, candidate_seeds: list, detection_param):
+        raise NotImplementedError
+
+
+class DetectionStrategy(Enum):
+
+    Initialization = "Initialization"
+    MultiGNSDetectionStrategy = "MultiGNSDetectionStrategy"
+    MultiGRSDetectionStrategy = "MultiGRSDetectionStrategy"
+    MultiJSDetectionStrategy = "MultiJSDetectionStrategy"
+    MultiNSDetectionStrategy = "MultiNSDetectionStrategy"
+
+    SingleGRSDetectionStrategy = "SingleGRSDetectionStrategy"
+    SingleJSDetectionStrategy = "SingleJSDetectionStrategy"
+    SingleNSDetectionStrategy = "SingleNSDetectionStrategy"
+    SingleSSDetectionStrategy = "SingleSSDetectionStrategy"

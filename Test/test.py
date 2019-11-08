@@ -12,9 +12,8 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import QWidget, QApplication, QHBoxLayout, QTextBrowser
 from PyQt5.QtCore import pyqtSignal, QThread, Qt
 from PyQt5.QtGui import QImage, QPixmap
-from Core.RoadDetection import RoadDetection, CircleSeed
+from Core.RoadDetection import RoadDetection, CircleSeed, RoadDetectionEx
 from Test.ShowResultLabel import ShowResultLabel
-from OverLoad.MultiMethod import overload
 
 
 class ShowImageWidget(QWidget):
@@ -31,7 +30,8 @@ class ShowImageWidget(QWidget):
         self.setLayout(self._horizon_layout)
 
         self._image = image
-        self._image_label = ShowResultLabel(self)
+        self._image_label = ShowResultLabel(image, self)
+        self._image_label.setScaledContents(True)
         self._image_label.setGeometry(0, 0, image.width(), image.height())
         self.new_seeds_generated.connect(self._image_label.new_seed_generated)
         self._image_label.setPixmap(QPixmap.fromImage(image))
@@ -40,7 +40,7 @@ class ShowImageWidget(QWidget):
         self._show_info_browser = QTextBrowser(self)
         self._horizon_layout.addWidget(self._show_info_browser)
 
-        self._road_detection = RoadDetection(image)
+        self._road_detection = RoadDetectionEx(image)
         self._road_detection.circle_seeds_generated.connect(self.show_generated_seeds_info)
         self._road_detection.circle_seeds_generated.connect(self._image_label.new_seed_generated)
 
@@ -61,6 +61,9 @@ class ShowImageWidget(QWidget):
             event.accept()
         else:
             self._image_label.keyPressEvent(event)
+
+    def keyReleaseEvent(self, a0: QtGui.QKeyEvent) -> None:
+        self._image_label.keyReleaseEvent(a0)
 
     def about_to_road_detect(self, init_circle_seed: CircleSeed):
         init_circle_seed.init_circle_seed(self._image)
@@ -86,9 +89,9 @@ class ShowImageWidget(QWidget):
 
 class RoadDetectThread(QThread):
 
-    road_detect_finished_signal = pyqtSignal(RoadDetection)
+    road_detect_finished_signal = pyqtSignal(RoadDetectionEx)
 
-    def __init__(self, road_detection: RoadDetection):
+    def __init__(self, road_detection: RoadDetectionEx):
         super(RoadDetectThread, self).__init__()
         self._road_detection = road_detection
         self.__flag = threading.Event()  # 用于暂停线程的标识
@@ -114,7 +117,8 @@ class RoadDetectThread(QThread):
         print("resume")
 
     def stop(self):
-        # self.__flag.set()  # 将线程从暂停状态恢复, 如果已经暂停的话（要是停止的话我就直接让他停止了，干嘛还要执行这一句语句啊，把这句注释了之后就没有滞后现象了。）
+        # self.__flag.set()  # 将线程从暂停状态恢复, 如果已经暂停的话（要是停止的话我就直接让他停止了，
+        # 干嘛还要执行这一句语句啊，把这句注释了之后就没有滞后现象了。）
         self.__running.clear()  # 设置为False
 
 
@@ -122,6 +126,7 @@ def test_main():
     # 到目前结果最好的位置和半径：[(799, 635), 11] [(605, 426), 11]
     image_path = "F:/RoadDetectionTestImg/4.png"
     image1 = QImage(image_path)
+    # image1 = image1.convertToFormat(QImage.Format_Grayscale8)
 
     app = QApplication(sys.argv)
     window = ShowImageWidget(image1)

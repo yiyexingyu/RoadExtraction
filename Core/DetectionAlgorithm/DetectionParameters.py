@@ -7,6 +7,7 @@
 # @Software: PyCharm
 
 from math import pi
+from Core.DetectionStrategy.AbstractDetectionStrategy import DetectionStrategy
 NO_LIMIT = float("inf")
 
 
@@ -23,7 +24,9 @@ class DetectionParameters:
                  moving_distance: int,
                  max_moving_distance: [int, None],
                  max_number_generated_seeds: [int, float],
-                 distance_increment: [int, None]):
+                 distance_increment: [int, None],
+                 spectral_distance: float,
+                 texture_distance: float):
         self._standard_similar_gray_proportion = standard_similar_gray_proportion
         self._addition_gray_proportion = addition_gray_proportion
         self._standard_gray_proportion = standard_gray_proportion
@@ -35,6 +38,9 @@ class DetectionParameters:
         self._max_moving_distance = max_moving_distance
         self._max_number_generated_seeds = max_number_generated_seeds
         self._distance_increment = distance_increment
+
+        self._standard_spectral_distance = spectral_distance
+        self._standard_texture_distance = texture_distance
 
     @property
     def SSGP(self):
@@ -56,6 +62,10 @@ class DetectionParameters:
     def CDiff(self):
         return self._color_difference
 
+    @CDiff.setter
+    def CDiff(self, color_diff):
+        self._color_difference = color_diff
+
     @property
     def ERA(self):
         return self._effective_range_angle
@@ -67,6 +77,10 @@ class DetectionParameters:
     @property
     def MD(self):
         return self._moving_distance
+
+    @MD.setter
+    def MD(self, new_md):
+        self._moving_distance = new_md
 
     @property
     def MMD(self):
@@ -85,6 +99,45 @@ class DetectionParameters:
     def max_number_generated_seeds(self):
         return self._max_number_generated_seeds
 
+    @property
+    def SSD(self):
+        """标准光谱特征距离"""
+        return self._standard_spectral_distance
+
+    @SSD.setter
+    def SSD(self, spectral_distance):
+        self._standard_spectral_distance = spectral_distance
+
+    @property
+    def STD(self):
+        """标准纹理特征距离"""
+        return self._standard_texture_distance
+
+    @STD.setter
+    def STD(self, texture_distance):
+        self._standard_texture_distance = texture_distance
+
+    @staticmethod
+    def get_detection_parameters(detection_strategy: DetectionStrategy, radius: int):
+        if detection_strategy == DetectionStrategy.MultiGNSDetectionStrategy:
+            return DetectionParameters.generate_multi_directional_general_similarity_detection_parameters(radius)
+        elif detection_strategy == DetectionStrategy.MultiGRSDetectionStrategy:
+            return DetectionParameters.generate_multi_directional_gray_similarity_detection_parameters(radius)
+        elif detection_strategy == DetectionStrategy.MultiNSDetectionStrategy:
+            return DetectionParameters.generate_multi_directional_narrow_similarity_detection_parameters(radius)
+        elif detection_strategy == DetectionStrategy.MultiJSDetectionStrategy:
+            return DetectionParameters.generate_multi_directional_jump_similarity_detection_parameters(radius)
+        elif detection_strategy == DetectionStrategy.SingleSSDetectionStrategy:
+            return DetectionParameters.generate_single_directional_similarity_detection_parameters(radius)
+        elif detection_strategy == DetectionStrategy.SingleGRSDetectionStrategy:
+            return DetectionParameters.generate_single_directional_gray_similarity_detection_parameters(radius)
+        elif detection_strategy == DetectionStrategy.SingleNSDetectionStrategy:
+            return DetectionParameters.generate_single_directional_narrow_similarity_detection_parameters(radius)
+        elif detection_strategy == DetectionStrategy.SingleJSDetectionStrategy:
+            return DetectionParameters.generate_single_directional_jump_similarity_detection_parameters(radius)
+        else:
+            raise NotImplemented
+
     @staticmethod
     def generate_multi_directional_general_similarity_detection_parameters(radius: int):
         """多方向检测的一般相似性检测算法参数"""
@@ -94,12 +147,15 @@ class DetectionParameters:
             standard_gray_proportion=None,
             standard_road_proportion=None,
             color_difference=44,    # 25,
-            effective_range_angle=3 * pi / 4,
+            effective_range_angle=2 * pi,
             is_detect_neighbour=True,
             max_number_generated_seeds=NO_LIMIT,
             moving_distance=2 * radius,
             max_moving_distance=None,
-            distance_increment=None
+            distance_increment=None,
+
+            spectral_distance=68.6,
+            texture_distance=0.6
         )
 
     @staticmethod
@@ -116,7 +172,10 @@ class DetectionParameters:
             max_number_generated_seeds=1,
             moving_distance=2 * radius,
             max_moving_distance=None,
-            distance_increment=None
+            distance_increment=None,
+
+            spectral_distance=56.6,
+            texture_distance=0.6
         )
 
     @staticmethod
@@ -133,7 +192,10 @@ class DetectionParameters:
             max_number_generated_seeds=1,
             moving_distance=2 * radius,
             max_moving_distance=None,
-            distance_increment=None
+            distance_increment=None,
+
+            spectral_distance=56.6,
+            texture_distance=0.6
         )
 
     @staticmethod
@@ -150,7 +212,10 @@ class DetectionParameters:
             max_number_generated_seeds=1,
             moving_distance=2 * radius,
             max_moving_distance=6 * radius,
-            distance_increment=2
+            distance_increment=4,
+
+            spectral_distance=56.6,
+            texture_distance=0.6
         )
 
     @staticmethod
@@ -167,7 +232,10 @@ class DetectionParameters:
             max_number_generated_seeds=1,
             moving_distance=2 * radius,
             max_moving_distance=None,
-            distance_increment=None
+            distance_increment=None,
+
+            spectral_distance=56.6,
+            texture_distance=0.6
         )
 
     @staticmethod
@@ -184,7 +252,10 @@ class DetectionParameters:
             max_number_generated_seeds=1,
             moving_distance=2 * radius,
             max_moving_distance=None,
-            distance_increment=None
+            distance_increment=None,
+
+            spectral_distance=56.6,
+            texture_distance=0.6
         )
 
     @staticmethod
@@ -201,7 +272,10 @@ class DetectionParameters:
             max_number_generated_seeds=1,
             moving_distance=2 * radius,
             max_moving_distance=None,
-            distance_increment=None
+            distance_increment=None,
+
+            spectral_distance=76.6,
+            texture_distance=0.66
         )
 
     @staticmethod
@@ -212,11 +286,14 @@ class DetectionParameters:
             addition_gray_proportion=None,
             standard_gray_proportion=None,
             standard_road_proportion=0.1,
-            color_difference=15,
+            color_difference=25,
             effective_range_angle=pi / 6,
             is_detect_neighbour=False,
             max_number_generated_seeds=1,
             moving_distance=2 * radius,
             max_moving_distance=6 * radius,
-            distance_increment=2
+            distance_increment=2,
+
+            spectral_distance=56.6,
+            texture_distance=0.6
         )
