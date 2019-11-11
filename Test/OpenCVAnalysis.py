@@ -8,11 +8,11 @@
 
 import cv2
 import numpy as np
-from sklearn import metrics
+# from sklearn import metrics
 from PyQt5.QtGui import QImage, QPixmap, QColor
 from PyQt5.QtWidgets import QLabel, QApplication
 from PyQt5.QtCore import QRect
-from DetectObjects.CircleSeed import CircleSeed
+from DetectObjects.CircleSeed import CircleSeed, CircleSeedNp
 from Test.CircleSeedItem import CircleSeedItem
 from DetectObjects.Utils import qimage2cvmat
 from matplotlib import pyplot as plt
@@ -75,10 +75,12 @@ def show_analysis_info(src_image: QImage, circle_seed_item: CircleSeedItem):
     cv2.destroyAllWindows()
 
 
-def compare_tow_seed_of_spectral_info(seed1: CircleSeed, seed2: CircleSeed):
-    print("seed1 光谱特征：", seed1.spectral_info_vector)
-    print("seed2 光谱特征：", seed2.spectral_info_vector)
-    distance = np.linalg.norm(np.subtract(seed1.spectral_info_vector, seed2.spectral_info_vector))
+def compare_tow_seed_of_spectral_info(image:np.ndarray, seed1: CircleSeedNp, seed2: CircleSeedNp):
+    shape = image.shape
+    print("seed1 光谱特征：", seed1.spectral_feature_vector)
+    print("seed2 光谱特征：", seed2.spectral_feature_vector)
+    print("局部交叉道路数目： ", np.intersect1d(seed1.get_pixels_position(shape), seed2.get_pixels_position(shape)).size)
+    distance = np.linalg.norm(np.subtract(seed1.spectral_feature_vector, seed2.spectral_feature_vector))
     print("光谱特征距离：", distance)
 
 
@@ -165,29 +167,33 @@ def threshold(src_img: QImage, low: int, height: int, val) -> QImage:
 
 
 if __name__ == '__main__':
-    import sys
-    path = "F:/RoadDetectionTestImg/1.jpg"
-    image = QImage(path)
+    # import time
+    # import sys
+    # img = cv2.imread("F:/RoadDetectionTestImg/4.png")
+    # print(sys.getsizeof(img))
+    # m = np.ones(img.shape)
+    # print(sys.getsizeof(m))
+    # n = np.ones(img.shape[:2], dtype=np.bool)
+    # print(sys.getsizeof(n))
+    # position = [1000, 400]
+    # radius = 11
+    # x_axis = np.arange(position[0] - radius, position[0] + radius, 1, np.int)
+    # y_axis = np.arange(position[1] - radius, position[1] + radius, 1, np.int)
+    # pixels_position = np.array(np.meshgrid(*[x_axis, y_axis])).T
+    # pixels_position = pixels_position.reshape((pixels_position.shape[0] * pixels_position.shape[1], 2))
+    # t = time.time()
+    # pos = img[pixels_position[:, 1], pixels_position[:, 0]]
+    # dt = time.time() - t
+    # print("时间： ", dt)
+    # print(len(pos))
+    # print(pos)
+    # print(polygon.count())
 
-    cv_img = qimage2cvmat(image)
-    gray_cv_img = cv2.cvtColor(cv_img, cv2.COLOR_RGB2GRAY)
-    bin_cv_img = cv2.adaptiveThreshold(gray_cv_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 21, -2)
-    cv2.imshow("adapt threshold", bin_cv_img)
-    cv2.waitKey()
-    cv2.destroyAllWindows()
-
-    def on_mouse(event: int, x: int, y: int, param=None):
-        # 保存坐标
-        point = (x, y)
-
-    cv2.setMouseCallback("window name", on_mouse)
-
-    # gray_img1 = threshold(image, 190, 220, 255)
-    # app = QApplication([])
-    #
-    # win = QLabel()
-    # win.setPixmap(QPixmap(gray_img1))
-    # win.show()
-    #
-    # sys.exit(app.exec_())
-
+    from DetectObjects.Utils import get_circle_path
+    position = [800, 680]
+    radius = 12
+    circle_path = get_circle_path(position, radius)
+    control_pos_rect = circle_path.controlPointRect().toRect()
+    bounding_rect = circle_path.boundingRect().toRect()
+    print("control pos rect: ", control_pos_rect.topLeft(), " ", control_pos_rect.size())
+    print("control pos rect: ", bounding_rect.topLeft(), " ", bounding_rect.size())

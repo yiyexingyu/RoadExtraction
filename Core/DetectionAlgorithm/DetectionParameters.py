@@ -7,7 +7,7 @@
 # @Software: PyCharm
 
 from math import pi
-from Core.DetectionStrategy.AbstractDetectionStrategy import DetectionStrategy
+from Core.DetectionStrategy.Strategy import DetectionStrategy
 NO_LIMIT = float("inf")
 
 
@@ -147,15 +147,15 @@ class DetectionParameters:
             standard_gray_proportion=None,
             standard_road_proportion=None,
             color_difference=44,    # 25,
-            effective_range_angle=2 * pi,
+            effective_range_angle=11 * pi / 6,
             is_detect_neighbour=True,
             max_number_generated_seeds=NO_LIMIT,
             moving_distance=2 * radius,
             max_moving_distance=None,
             distance_increment=None,
 
-            spectral_distance=68.6,
-            texture_distance=0.6
+            spectral_distance=56.6,
+            texture_distance=3.6
         )
 
     @staticmethod
@@ -175,7 +175,7 @@ class DetectionParameters:
             distance_increment=None,
 
             spectral_distance=56.6,
-            texture_distance=0.6
+            texture_distance=3.45
         )
 
     @staticmethod
@@ -194,8 +194,8 @@ class DetectionParameters:
             max_moving_distance=None,
             distance_increment=None,
 
-            spectral_distance=56.6,
-            texture_distance=0.6
+            spectral_distance=26.6,
+            texture_distance=3.6
         )
 
     @staticmethod
@@ -211,11 +211,11 @@ class DetectionParameters:
             is_detect_neighbour=False,
             max_number_generated_seeds=1,
             moving_distance=2 * radius,
-            max_moving_distance=6 * radius,
-            distance_increment=4,
+            max_moving_distance=8 * radius,
+            distance_increment=6,
 
-            spectral_distance=56.6,
-            texture_distance=0.6
+            spectral_distance=66.6,
+            texture_distance=1.2
         )
 
     @staticmethod
@@ -254,7 +254,7 @@ class DetectionParameters:
             max_moving_distance=None,
             distance_increment=None,
 
-            spectral_distance=56.6,
+            spectral_distance=76.6,
             texture_distance=0.6
         )
 
@@ -274,8 +274,8 @@ class DetectionParameters:
             max_moving_distance=None,
             distance_increment=None,
 
-            spectral_distance=76.6,
-            texture_distance=0.66
+            spectral_distance=66.6,
+            texture_distance=3.66
         )
 
     @staticmethod
@@ -292,7 +292,7 @@ class DetectionParameters:
             max_number_generated_seeds=1,
             moving_distance=2 * radius,
             max_moving_distance=6 * radius,
-            distance_increment=2,
+            distance_increment=6,
 
             spectral_distance=56.6,
             texture_distance=0.6

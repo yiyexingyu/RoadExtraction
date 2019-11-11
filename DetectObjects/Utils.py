@@ -141,6 +141,15 @@ def get_circle_seed_path(circle_seed) -> QPainterPath:
     return seed_path
 
 
+def get_circle_path(center_pos: list, radius: int):
+    rect = QRectF(center_pos[0] - radius, center_pos[1] - radius, radius * 2, radius * 2)
+    seed_path = QPainterPath()
+    seed_path.arcMoveTo(rect, 0)
+    seed_path.arcTo(rect, 0, 360)
+    seed_path.closeSubpath()
+    return seed_path
+
+
 def adjust_angle(src_angle: float) -> float:
     while src_angle < 0.:
         src_angle = 2 * pi + src_angle
@@ -171,6 +180,20 @@ def get_pixels_from_path(path: QPainterPath) -> list:
         for i in range(polygon.size()):
             result.append(polygon.at(i))
     return result
+
+
+def bound(min_val, value, max_val):
+    """
+    如果value >= max_val return max_val
+    如果value <= min_val return min_val
+    否则 return value
+
+    :param min_val: 最小值
+    :param value: 被测值
+    :param max_val: 最大值
+    """
+
+    return max(min_val, min(max_val, value))
 
 
 def combination22(src_list: [tuple, list]) -> list:

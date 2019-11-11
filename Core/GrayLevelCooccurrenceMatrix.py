@@ -193,7 +193,7 @@ class GrayLCM:
         """计算灰度共生矩阵的三个特征：角二阶距、对比度和熵"""
         # 归一化处理
         glcm_norm = gray_level_cm / np.sum(gray_level_cm)
-        shape = glcm_norm.sahpe
+        shape = glcm_norm.shape
 
         # 角二阶距
         energy = np.sum(np.square(glcm_norm))
@@ -202,7 +202,7 @@ class GrayLCM:
         contrast, entropy = 0, 0
         for y in range(shape[0]):
             for x in range(shape[1]):
-                contrast += ((x - y) ** 2) * glcm_norm[x][y]
+                contrast += ((x - y) ** 2) * glcm_norm[y][x]
                 if gray_level_cm[y][x] > 0:
                     entropy -= glcm_norm[y][x] * np.log2(glcm_norm[y][x])
         return energy, contrast, entropy
@@ -238,13 +238,13 @@ def get_circle_spectral_vector(src_rgb_img: np.ndarray):
     """
     assert src_rgb_img.ndim >= 3
     red = src_rgb_img[:, :, 0]
-    red = np.extract(red >= 0, red)
+    red = red[red >= 0]
 
     green = src_rgb_img[:, :, 1]
-    green = np.extract(green >= 0, green)
+    green = green[green >= 0]
 
     blue = src_rgb_img[:, :, 2]
-    blue = np.extract(blue >= 0, blue)
+    blue = blue[blue >= 0]
 
     red_mean = np.mean(red)
     green_mean = np.mean(green)
@@ -280,8 +280,8 @@ if __name__ == '__main__':
 
     for i in range(6):
 
-        x, y = (random.randint(0, size-1), random.randint(0, size-1))
-        test_array[x][y] = num + i
+        x_, y_ = (random.randint(0, size-1), random.randint(0, size-1))
+        test_array[x_][y_] = num + i
 
         t = time.time()
         _pos = np.unravel_index(np.argmax(test_array), test_array.shape)
@@ -293,9 +293,9 @@ if __name__ == '__main__':
         _shape = test_array.shape
         max_num = 0
         t = time.time()
-        for y in range(_shape[1]):
-            for x in range(_shape[0]):
-                num = test_array[y][x]
+        for y_ in range(_shape[1]):
+            for x_ in range(_shape[0]):
+                num = test_array[y_][x_]
                 if num > max_num:
                     max_num = num
         dt = time.time() - t
