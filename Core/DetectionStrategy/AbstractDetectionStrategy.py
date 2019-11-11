@@ -6,28 +6,17 @@
 # @Project : RoadExtraction
 # @Software: PyCharm
 
-import numpy as np
 from numpy import ndarray
 from math import sin, cos
 from abc import abstractmethod
-from PyQt5.QtGui import QImage
 from DetectObjects.CircleSeed import CircleSeedNp
 from DetectObjects.Utils import adjust_angle
-# from ..DetectionAlgorithm.DetectionParameters import DetectionParameters
 
 
 class AbstractDetectionStrategy:
 
     def __init__(self):
         """TODO"""
-
-    @abstractmethod
-    def road_detect(self, image: QImage, parent_seed, detection_param, angle_interval):
-        raise NotImplementedError
-
-    @abstractmethod
-    def analysis_peripheral_condition(self, candidate_seeds: list, detection_param):
-        raise NotImplementedError
 
     @abstractmethod
     def road_detection(self, image, ref_seed, parent_seed, angle_interval, detection_strategy, detection_param):

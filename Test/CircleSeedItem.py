@@ -8,7 +8,7 @@
 
 from enum import IntEnum
 import numpy as np
-from PyQt5.QtGui import QColor, QPainterPath, QImage
+from PyQt5.QtGui import QColor, QPainterPath
 from PyQt5.QtCore import QSizeF, QRect, QPoint, Qt, QRectF, pyqtSignal, QObject
 
 

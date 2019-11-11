@@ -8,85 +8,10 @@
 
 import sys
 import threading
-import numpy as np
-from matplotlib import pyplot as plt
-from PyQt5 import QtGui
-from PyQt5.QtWidgets import QWidget, QApplication, QHBoxLayout, QTextBrowser
-from PyQt5.QtCore import pyqtSignal, QThread, Qt
-from PyQt5.QtGui import QImage, QPixmap
-from Core.RoadDetection import RoadDetection, CircleSeed, RoadDetectionEx
-from Test.ShowResultLabel import ShowResultLabel
-
-
-class ShowImageWidget(QWidget):
-
-    new_seeds_generated = pyqtSignal(CircleSeed)
-
-    def __init__(self, image: QImage):
-        super(ShowImageWidget, self).__init__()
-        self.setWindowTitle("道路提取算法测试")
-        self.setFixedWidth(image.width() + 320)
-        self.setFixedHeight(image.height())
-        self._horizon_layout = QHBoxLayout(self)
-        self._horizon_layout.setContentsMargins(0, 0, 5, 5)
-        self.setLayout(self._horizon_layout)
-
-        self._image = image
-        self._image_label = ShowResultLabel(image, self)
-        self._image_label.setScaledContents(True)
-        self._image_label.setGeometry(0, 0, image.width(), image.height())
-        self.new_seeds_generated.connect(self._image_label.new_seed_generated)
-        self._image_label.setPixmap(QPixmap.fromImage(image))
-        self._horizon_layout.addWidget(self._image_label)
-
-        self._show_info_browser = QTextBrowser(self)
-        self._horizon_layout.addWidget(self._show_info_browser)
-
-        self._road_detection = RoadDetectionEx(image)
-        self._road_detection.circle_seeds_generated.connect(self.show_generated_seeds_info)
-        self._road_detection.circle_seeds_generated.connect(self._image_label.new_seed_generated)
-
-        self._road_detect_thread = RoadDetectThread(self._road_detection)
-        self._road_detect_thread.road_detect_finished_signal.connect(self._image_label.road_detection_finished)
-        self._road_detect_thread.road_detect_finished_signal.connect(self.road_detect_finished)
-
-        self._image_label.start_road_detection_signal.connect(self.about_to_road_detect)
-        self._image_label.circle_seed_clicked_signal.connect(self.show_selected_seed_info)
-
-    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
-        if event.key() == Qt.Key_Q and event.modifiers() & Qt.ControlModifier:
-            if self._road_detect_thread.isRunning():
-                self._road_detect_thread.pause()
-                event.accept()
-        elif event.key() == Qt.Key_A and event.modifiers() & Qt.ControlModifier:
-            self._road_detect_thread.resume()
-            event.accept()
-        else:
-            self._image_label.keyPressEvent(event)
-
-    def keyReleaseEvent(self, a0: QtGui.QKeyEvent) -> None:
-        self._image_label.keyReleaseEvent(a0)
-
-    def about_to_road_detect(self, init_circle_seed: CircleSeed):
-        init_circle_seed.init_circle_seed(self._image)
-        self._road_detection.initialize(init_circle_seed.position, init_circle_seed.radius)
-        self._road_detect_thread.start()
-        self._show_info_browser.append("==============================")
-        self._show_info_browser.append("开始进行道路检测....")
-
-    def add_circle_seed(self, circle_seed: CircleSeed):
-        self._image_label.add_circle_seed(circle_seed)
-
-    def show_selected_seed_info(self, index, circle_seed):
-        self._show_info_browser.append(str(index) + "号子种子信息：\n" + circle_seed.__str__())
-
-    def show_generated_seeds_info(self, generated_seed: CircleSeed):
-        self._show_info_browser.append("生成子种子：\n" + generated_seed.__str__())
-
-    def road_detect_finished(self, road_detection: RoadDetection):
-        self._show_info_browser.append(
-            "道路检测结束： \n" + "共产生圆形种子：" + str(len(road_detection.get_seed_list()) - 1) + " 个")
-        self._show_info_browser.append("==============================")
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import pyqtSignal, QThread
+from PyQt5.QtGui import QImage
+from Core.RoadDetection import RoadDetectionEx
 
 
 class RoadDetectThread(QThread):
@@ -131,9 +56,7 @@ def test_main():
     # image1 = image1.convertToFormat(QImage.Format_Grayscale8)
 
     app = QApplication(sys.argv)
-    window = ShowImageWidget(image1)
 
-    window.show()
     sys.exit(app.exec_())
 
 

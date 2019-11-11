@@ -6,14 +6,6 @@
 # @Project : RoadExtraction
 # @Software: PyCharm
 
-# -*- coding: utf-8 -*-
-# @Time    : 2019/10/9 22:10
-# @Author  : 何盛信
-# @Email   : 2958029539@qq.com
-# @File    : test.py
-# @Project : RoadExtraction
-# @Software: PyCharm
-
 import sys
 import threading
 import cv2
@@ -23,7 +15,7 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import QWidget, QApplication, QHBoxLayout, QTextBrowser
 from PyQt5.QtCore import pyqtSignal, QThread, Qt
 from PyQt5.QtGui import QImage, QPixmap
-from Core.RoadDetection import CircleSeedNp, RoadDetection, CircleSeed
+from Core.RoadDetection import CircleSeedNp, RoadDetection
 from Test.ShowResultLabel import ShowResultLabel
 
 
@@ -78,20 +70,20 @@ class ShowImageWidget(QWidget):
     def keyReleaseEvent(self, a0: QtGui.QKeyEvent) -> None:
         self._image_label.keyReleaseEvent(a0)
 
-    def about_to_road_detect(self, init_circle_seed: CircleSeed):
+    def about_to_road_detect(self, init_circle_seed: CircleSeedNp):
         # init_circle_seed.init_circle_seed(self._image)
         self._road_detection.initialize_by_circle_seed(init_circle_seed)
         self._road_detect_thread.start()
         self._show_info_browser.append("==============================")
         self._show_info_browser.append("开始进行道路检测....")
 
-    def add_circle_seed(self, circle_seed: CircleSeed):
+    def add_circle_seed(self, circle_seed: CircleSeedNp):
         self._image_label.add_circle_seed(circle_seed)
 
     def show_selected_seed_info(self, index, circle_seed):
         self._show_info_browser.append(str(index) + "号子种子信息：\n" + circle_seed.__str__())
 
-    def show_generated_seeds_info(self, generated_seed: CircleSeed):
+    def show_generated_seeds_info(self, generated_seed: CircleSeedNp):
         self._show_info_browser.append("生成子种子：\n" + generated_seed.__str__())
 
     def road_detect_finished(self, road_detection: RoadDetection):

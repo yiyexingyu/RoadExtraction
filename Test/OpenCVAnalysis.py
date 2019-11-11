@@ -8,11 +8,8 @@
 
 import cv2
 import numpy as np
-# from sklearn import metrics
-from PyQt5.QtGui import QImage, QPixmap, QColor
-from PyQt5.QtWidgets import QLabel, QApplication
-from PyQt5.QtCore import QRect
-from DetectObjects.CircleSeed import CircleSeed, CircleSeedNp
+from PyQt5.QtGui import QImage,  QColor
+from DetectObjects.CircleSeed import CircleSeedNp
 from Test.CircleSeedItem import CircleSeedItem
 from DetectObjects.Utils import qimage2cvmat
 from matplotlib import pyplot as plt

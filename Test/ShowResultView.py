@@ -7,15 +7,12 @@
 # @Software: PyCharm
 
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QMenu, QAction, QGraphicsView
-from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QRect
-from PyQt5.QtGui import QPen, QPainter, QImage
+from PyQt5.QtWidgets import QGraphicsView
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QPainter
 
-from DetectObjects.CircleSeed import CircleSeed
+from DetectObjects.CircleSeed import CircleSeedNp as CircleSeed
 from Test.ShowResultLabel import ShowResultItem
-from .CircleSeedItem import CircleSeedItem
-from .CircleSeedDetail import CircleSeedDetail
-from .OpenCVAnalysis import show_analysis_info, compare_to_seed, show_grabcut_info
 
 
 class ShowResultView(QGraphicsView):

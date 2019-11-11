@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2019/10/6 20:02
-# @Author  : 何盛信
+# @Time    : 2019/11/11 14:50
+# @Author  : 一叶星羽
 # @Email   : 2958029539@qq.com
 # @File    : DetectionParameters.py
 # @Project : RoadExtraction
@@ -297,3 +297,4 @@ class DetectionParameters:
             spectral_distance=56.6,
             texture_distance=0.6
         )
+
