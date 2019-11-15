@@ -38,12 +38,25 @@ def get_circle_path(center_pos: list, radius: int):
     return seed_path
 
 
-def adjust_angle(src_angle: float) -> float:
-    while src_angle < 0.:
-        src_angle = 2 * pi + src_angle
+def adjust_angle(src_angle: [float, np.ndarray]) -> float:
+    if isinstance(src_angle, float):
+        while src_angle < 0.:
+            src_angle = 2 * pi + src_angle
 
-    while src_angle > 2 * pi:
-        src_angle = src_angle - 2 * pi
+        while src_angle > 2 * pi:
+            src_angle = src_angle - 2 * pi
+    elif isinstance(src_angle, np.ndarray):
+        neg_angle = src_angle[src_angle < 0]   # type: np.ndarray
+        while neg_angle.size > 0:
+            neg_angle += 2 * pi
+            src_angle[src_angle < 0] = neg_angle
+            neg_angle = src_angle[src_angle < 0]  # type: np.ndarray
+
+        large_angle = src_angle[src_angle > 2 * pi]  # type: np.ndarray
+        while large_angle.size > 0:
+            large_angle -= 2 * pi
+            src_angle[src_angle > 2 * pi] = large_angle
+            large_angle = src_angle[src_angle > 2 * pi]  # type: np.ndarray
 
     return src_angle
 

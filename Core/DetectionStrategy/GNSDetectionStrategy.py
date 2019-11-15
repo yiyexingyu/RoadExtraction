@@ -6,7 +6,9 @@
 # @Project : RoadExtraction
 # @Software: PyCharm
 
+import numpy as np
 from numpy import ndarray
+from DetectObjects.CircleSeed import CircleSeedNp
 from .AbstractDetectionStrategy import AbstractDetectionStrategy
 
 
@@ -38,12 +40,24 @@ class GNSDetectionStrategy(AbstractDetectionStrategy):
             image, parent_seed, ref_seed, angle_interval, detection_strategy, detection_param)
         if candidate_seeds is None or len(candidate_seeds) <= 0:
             return []
-
         result = []
 
         for candidate_seed in candidate_seeds:  # type: CircleSeedNp
             if candidate_seed.spectral_distance <= detection_param.SSD:
                 result.append(candidate_seed)
+
+        # x_candidates, y_candidates, directions = AbstractDetectionStrategy.generate_candidate_seeds(
+        #     image, parent_seed, ref_seed, angle_interval, detection_strategy, detection_param)  # type: np.ndarray, np.ndarray, np.ndarray
+        #
+        # if directions.size <= 0:
+        #     return []
+        # result = []
+        #
+        # for x, y, direction in np.nditer([x_candidates, y_candidates, directions]):
+        #     candidate_seed =\
+        #         CircleSeedNp([int(x), int(y)], parent_seed.radius, detection_strategy, image, float(direction), ref_seed)
+        #     if candidate_seed.spectral_distance <= detection_param.SSD:
+        #         result.append(candidate_seed)
 
         # 校验邻居候选种子(与生成的种子方向相距60°的候选种子，以检测道路是否变宽
         # 如果其邻居种子也是符合条件的种子，那继续校验邻居种子的邻居种子，直至没有

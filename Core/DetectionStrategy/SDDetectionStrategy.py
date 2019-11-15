@@ -50,5 +50,24 @@ class SDDetectionStrategy(AbstractDetectionStrategy):
                     temp_result = candidate_seed
                 elif temp_result.spectral_distance > candidate_seed.spectral_distance:
                     temp_result = candidate_seed
+
+        # x_candidates, y_candidates, directions = AbstractDetectionStrategy.generate_candidate_seeds(
+        #     image, parent_seed, ref_seed, angle_interval, detection_strategy,
+        #     detection_param)  # type: np.ndarray, np.ndarray, np.ndarray
+        #
+        # if directions.size <= 0:
+        #     return []
+        # temp_result = None
+        #
+        # for x, y, direction in np.nditer([x_candidates, y_candidates, directions]):
+        #     candidate_seed = \
+        #         CircleSeedNp([int(x), int(y)], parent_seed.radius, detection_strategy, image, float(direction),ref_seed)
+        #     if candidate_seed.spectral_distance <= detection_param.SSD:
+        #         if direction == parent_seed.direction:
+        #             return [candidate_seed]
+        #         elif temp_result is None:
+        #             temp_result = candidate_seed
+        #         elif temp_result.spectral_distance > candidate_seed.spectral_distance:
+        #             temp_result = candidate_seed
         return [temp_result] if temp_result else []
 

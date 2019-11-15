@@ -154,15 +154,15 @@ class DetectionParameters:
             max_moving_distance=None,
             distance_increment=None,
 
-            spectral_distance=56.6,
+            spectral_distance=40.6,   #65
             texture_distance=3.6
         )
 
     @staticmethod
-    def generate_multi_directional_narrow_similarity_detection_parameters(radius: int):
-        """多方向检测的窄相似性检测算法参数"""
+    def generate_multi_directional_jump_similarity_detection_parameters(radius: int):
+        """多方向检测的跳跃相似性检测算法参数"""
         return DetectionParameters(
-            standard_similar_gray_proportion=0.3,
+            standard_similar_gray_proportion=0.25,
             addition_gray_proportion=None,
             standard_gray_proportion=None,
             standard_road_proportion=0.1,
@@ -171,12 +171,42 @@ class DetectionParameters:
             is_detect_neighbour=False,
             max_number_generated_seeds=1,
             moving_distance=2 * radius,
+            max_moving_distance=8 * radius,
+            distance_increment=6,
+
+            spectral_distance=50.6,  #76
+            texture_distance=1.2
+        )
+
+    @staticmethod
+    def generate_single_directional_similarity_detection_parameters(radius: int):
+        """单方向检测的窄相似性检测算法参数"""
+        return DetectionParameters(
+            standard_similar_gray_proportion=0.6,
+            addition_gray_proportion=None,
+            standard_gray_proportion=None,
+            standard_road_proportion=None,
+            color_difference=35,
+            effective_range_angle=pi / 6,
+            is_detect_neighbour=False,
+            max_number_generated_seeds=1,
+            moving_distance=2 * radius,
             max_moving_distance=None,
             distance_increment=None,
 
-            spectral_distance=56.6,
-            texture_distance=3.45
+            spectral_distance=40.8,  #56.6,
+            texture_distance=0.6
         )
+
+
+
+
+
+
+
+
+
+
 
     @staticmethod
     def generate_multi_directional_gray_similarity_detection_parameters(radius: int):
@@ -199,10 +229,10 @@ class DetectionParameters:
         )
 
     @staticmethod
-    def generate_multi_directional_jump_similarity_detection_parameters(radius: int):
-        """多方向检测的跳跃相似性检测算法参数"""
+    def generate_multi_directional_narrow_similarity_detection_parameters(radius: int):
+        """多方向检测的窄相似性检测算法参数"""
         return DetectionParameters(
-            standard_similar_gray_proportion=0.25,
+            standard_similar_gray_proportion=0.3,
             addition_gray_proportion=None,
             standard_gray_proportion=None,
             standard_road_proportion=0.1,
@@ -211,31 +241,11 @@ class DetectionParameters:
             is_detect_neighbour=False,
             max_number_generated_seeds=1,
             moving_distance=2 * radius,
-            max_moving_distance=8 * radius,
-            distance_increment=6,
-
-            spectral_distance=66.6,
-            texture_distance=1.2
-        )
-
-    @staticmethod
-    def generate_single_directional_similarity_detection_parameters(radius: int):
-        """单方向检测的窄相似性检测算法参数"""
-        return DetectionParameters(
-            standard_similar_gray_proportion=0.6,
-            addition_gray_proportion=None,
-            standard_gray_proportion=None,
-            standard_road_proportion=None,
-            color_difference=35,
-            effective_range_angle=pi / 6,
-            is_detect_neighbour=False,
-            max_number_generated_seeds=1,
-            moving_distance=2 * radius,
             max_moving_distance=None,
             distance_increment=None,
 
             spectral_distance=56.6,
-            texture_distance=0.6
+            texture_distance=3.45
         )
 
     @staticmethod

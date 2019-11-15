@@ -136,7 +136,7 @@ class ShowResultLabel(QLabel):
             self._select_items_flag = False
             if self._temp_seed:
                 compare_tow_seed_of_spectral_info(self._cv_image, self._circle_seeds_list[self._current_item_index], self._temp_seed)
-                self._selected_indexes = self._road_detection.validation_road_pixels_proportion(self._circle_seeds_list[self._current_item_index])
+                # self._selected_indexes = self._road_detection.validation_road_pixels_proportion(self._circle_seeds_list[self._current_item_index])
                 self._temp_seed = None
 
     def wheelEvent(self, event: QtGui.QWheelEvent) -> None:

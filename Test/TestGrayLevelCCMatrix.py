@@ -113,7 +113,7 @@ class RoadDetectThread(QThread):
         print("线程任务完成！共产生道路种子：", len(self._road_detection.get_seed_list()), "个")
         self.road_detect_finished_signal.emit(self._road_detection)
         show_run_time_data(self._road_detection.get_run_time_data())
-        self._road_detection.road_extraction()
+        # self._road_detection.road_extraction()
 
     def pause(self):
         self.__flag.clear()  # 设置为False, 让线程阻塞

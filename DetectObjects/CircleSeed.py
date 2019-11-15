@@ -31,7 +31,7 @@ class CircleSeedNp:
         :type CircleSeedNp
     """
 
-    def __init__(self, position, radius, generate_strategy, image=None, direction=0, parent_seed=None):
+    def __init__(self, position, radius, generate_strategy, image=None, direction=0, parent_seed=None, ref_spectral=None):
         """
         基于numpy数组的圆形探测种子，检测跟踪道路的主对象
         :param position: 圆形种子圆心相对于源图片左上角的位置
@@ -63,9 +63,12 @@ class CircleSeedNp:
         # 圆形种子的特征信息: 光谱特征向量和纹理特征向量
         self._spectral_feature_vector = []
         self._texture_feature_vector = []
+        self._spectral_distance = 0.
 
         if isinstance(image, np.ndarray):
             self.initialization(image)
+            if self._generate_strategy != DetectionStrategy.Initialization:
+                self._spectral_distance = np.linalg.norm(np.subtract(self._spectral_feature_vector, ref_spectral))
 
     def initialization(self, image: np.ndarray):
         assert image.ndim >= 3
@@ -136,9 +139,10 @@ class CircleSeedNp:
 
     @property
     def spectral_distance(self):
-        if self._parent_seed:
-            return np.linalg.norm(np.subtract(self._spectral_feature_vector, self._parent_seed.spectral_feature_vector))
-        return 0.
+        return self._spectral_distance
+        # if self._parent_seed:
+        #     return np.linalg.norm(np.subtract(self._spectral_feature_vector, self._parent_seed.spectral_feature_vector))
+        # return 0.
 
     @property
     def texture_distance(self):

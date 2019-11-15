@@ -38,6 +38,7 @@ class RoadDetection(QObject):
         self._next_circle_seed = -1
         self._road_img = np.zeros(self._image.shape[:2], np.int8)
 
+        self._ref_spectral_vector = np.array([])
         self._angle_interval = pi / 12
         self._is_init = False
         self._is_generated_circle_seed = False
@@ -85,12 +86,14 @@ class RoadDetection(QObject):
         circle_seed = CircleSeedNp(position, radius, DetectionStrategy.Initialization, self._image, direction)
         self._seed_list.append(circle_seed)
         self._next_circle_seed += 1
+        self._ref_spectral_vector = np.array(circle_seed.spectral_feature_vector)
         self._is_init = True
         return circle_seed
 
     def initialize_by_circle_seed(self, circle_seed: CircleSeedNp):
         self._seed_list.append(circle_seed)
         self._next_circle_seed += 1
+        self._ref_spectral_vector = np.array(circle_seed.spectral_feature_vector)
         self._is_init = True
         return circle_seed
 
@@ -99,6 +102,7 @@ class RoadDetection(QObject):
         if not self._is_init:
             raise NoInitializeError()
 
+        ref_spectral_vector = self._ref_spectral_vector / len(self._seed_list)
         road_detection_context = RoadDetectionContext()
         if not self._next_circle_seed == len(self._seed_list):
             current_circle_seed = self._seed_list[self._next_circle_seed]  # type: CircleSeed
@@ -110,7 +114,7 @@ class RoadDetection(QObject):
                 DetectionStrategy.SingleSSDetectionStrategy, current_circle_seed.radius)
             road_detection_context.road_detection_strategy = SDDetectionStrategy()
             single_analysis_seeds = road_detection_context.road_detection(
-                self._image, current_circle_seed, self._seed_list[0],
+                self._image, current_circle_seed, ref_spectral_vector,
                 self._angle_interval,
                 DetectionStrategy.SingleSSDetectionStrategy,
                 single_direction_detect_param)
@@ -121,7 +125,7 @@ class RoadDetection(QObject):
                 DetectionStrategy.MultiGNSDetectionStrategy, current_circle_seed.radius)
             road_detection_context.road_detection_strategy = GNSDetectionStrategy()
             multi_analysis_seeds = road_detection_context.road_detection(
-                self._image, current_circle_seed, self._seed_list[0],
+                self._image, current_circle_seed, ref_spectral_vector,
                 self._angle_interval,
                 DetectionStrategy.MultiGNSDetectionStrategy,
                 multi_direction_detect_param)
@@ -152,7 +156,7 @@ class RoadDetection(QObject):
                 while not (self._is_generated_circle_seed or multi_jump_detect_param.MD >= multi_jump_detect_param.MMD):
                     # print(multi_jump_detect_param.MD, ", ", multi_jump_detect_param.MMD)
                     jump_detected_seeds = road_detection_context.road_detection(
-                        self._image, current_circle_seed, self._seed_list[0],
+                        self._image, current_circle_seed, ref_spectral_vector,
                         self._angle_interval,
                         DetectionStrategy.MultiJSDetectionStrategy,
                         multi_jump_detect_param)
@@ -165,53 +169,6 @@ class RoadDetection(QObject):
         else:
             self._is_init = False
             return False
-
-    def _generate_candidate_seeds(self, parent_seed, detection_strategy, detection_param):
-        """
-        根据父种子、检测策略和有效角度范围生成候选种子（未经筛选）。
-        当不指定有效有效角度范围时，会沿着父种子的方向生成一个候选种子
-        :param parent_seed: 用于生成候选种子的父种子
-        :type parent_seed: CircleSeed
-        :param detection_strategy: 道路跟踪检测的策略
-        :type detection_strategy: DetectionStrategy
-        :param detection_param: 道路跟踪检测的常数参数
-        :type detection_param: DetectionParameters
-        :return: 返回生成的候选种子列表
-        :rtype: list
-        """
-
-        def create_candidate_seed(current_angle: float) -> [CircleSeedNp, None]:
-            x_candidate = parent_seed.position[0] + int(moving_distance * cos(current_angle))
-            y_candidate = parent_seed.position[1] - int(moving_distance * sin(current_angle))
-
-            bound_x = (x_candidate - parent_seed.radius < 0, x_candidate + parent_seed.radius > self._image.shape[1])
-            bound_y = (y_candidate - parent_seed.radius < 0, y_candidate + parent_seed.radius > self._image.shape[0])
-            if any(bound_x) or any(bound_y):
-                return None
-            current_pos = [x_candidate, y_candidate]
-
-            # 创建候选种子
-            candidate_seed = CircleSeedNp(current_pos, parent_seed.radius, detection_strategy,
-                                          self._image, current_angle, parent_seed=self._seed_list[0])
-            return candidate_seed
-        if detection_param.ERA is None:
-            return [create_candidate_seed(parent_seed.direction)]
-        moving_distance = detection_param.MD if detection_param.MD > 0 else 2 * parent_seed.radius
-        candidate_seeds = []
-        half_era = detection_param.ERA / 2
-
-        for k in range(0, int(half_era / self._angle_interval) + 1):
-            pos_current_angle = adjust_angle(k * self._angle_interval + parent_seed.direction)
-            nes_current_angle = adjust_angle(parent_seed.direction - k * self._angle_interval)
-
-            circle_seed = create_candidate_seed(pos_current_angle)
-            if circle_seed:
-                candidate_seeds.append(circle_seed)
-            if k != 0:
-                circle_seed = create_candidate_seed(nes_current_angle)
-                if circle_seed:
-                    candidate_seeds.append(circle_seed)
-        return candidate_seeds
 
     def road_detection(self):
         if len(self._seed_list) <= 0:
@@ -254,13 +211,16 @@ class RoadDetection(QObject):
             result = road_pixels_proportion <= standard_proportion
             dt = time.time() - st
             self._run_time_data["validate"].append(dt)
-            print("validate ", dt)
 
         if result:
             self._is_generated_circle_seed = True
             self._seed_list.append(circle_seed)
             self._road_img[circle_pixels[:, 1], circle_pixels[:, 0]] = 1
             self._seed_list[self._next_circle_seed - 1].append_child_seed(circle_seed)
+            try:
+                self._ref_spectral_vector += circle_seed.spectral_feature_vector
+            except ValueError:
+                self._ref_spectral_vector = np.array(circle_seed.spectral_feature_vector)
             self.circle_seeds_generated.emit(circle_seed)
 
     def validation_road_pixels_proportion(self, circle_seed: CircleSeedNp, standard_proportion: float = 0.12):

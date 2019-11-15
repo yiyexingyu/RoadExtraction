@@ -164,33 +164,16 @@ def threshold(src_img: QImage, low: int, height: int, val) -> QImage:
 
 
 if __name__ == '__main__':
-    # import time
-    # import sys
-    # img = cv2.imread("F:/RoadDetectionTestImg/4.png")
-    # print(sys.getsizeof(img))
-    # m = np.ones(img.shape)
-    # print(sys.getsizeof(m))
-    # n = np.ones(img.shape[:2], dtype=np.bool)
-    # print(sys.getsizeof(n))
-    # position = [1000, 400]
-    # radius = 11
-    # x_axis = np.arange(position[0] - radius, position[0] + radius, 1, np.int)
-    # y_axis = np.arange(position[1] - radius, position[1] + radius, 1, np.int)
-    # pixels_position = np.array(np.meshgrid(*[x_axis, y_axis])).T
-    # pixels_position = pixels_position.reshape((pixels_position.shape[0] * pixels_position.shape[1], 2))
-    # t = time.time()
-    # pos = img[pixels_position[:, 1], pixels_position[:, 0]]
-    # dt = time.time() - t
-    # print("时间： ", dt)
-    # print(len(pos))
-    # print(pos)
-    # print(polygon.count())
+    import time
 
-    from DetectObjects.Utils import get_circle_path
-    position = [800, 680]
-    radius = 12
-    circle_path = get_circle_path(position, radius)
-    control_pos_rect = circle_path.controlPointRect().toRect()
-    bounding_rect = circle_path.boundingRect().toRect()
-    print("control pos rect: ", control_pos_rect.topLeft(), " ", control_pos_rect.size())
-    print("control pos rect: ", bounding_rect.topLeft(), " ", bounding_rect.size())
+    m = np.arange(1000)
+    n = np.arange(1000)
+
+    t = time.time()
+    for x, y in np.nditer([m, n]):
+        k = x + y
+    print(time.time() - t)
+
+    t = time.time()
+    l = [x + y for x, y in np.nditer([m, n])]
+    print(time.time() - t)
