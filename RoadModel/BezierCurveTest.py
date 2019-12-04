@@ -466,16 +466,6 @@ class BezierCurveLabel(QLabel):
         n.moveTo(100, 110)
         n.lineTo(200, 110)
 
-        painter.drawPath(p)
-        painter.drawPath(n)
-
-        k = p & n
-        pen.setWidth(4)
-        pen.setColor(Qt.blue)
-        painter.setPen(pen)
-        painter.drawPath(k)
-        print(k.isEmpty())
-
 
 if __name__ == '__main__':
     import sys

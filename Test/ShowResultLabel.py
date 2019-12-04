@@ -11,7 +11,7 @@ import numpy as np
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import QLabel, QMenu, QAction, QGraphicsObject, QWidget, QStyleOptionGraphicsItem
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QRect
-from PyQt5.QtGui import QPen, QPainter, QImage
+from PyQt5.QtGui import QPen, QPainter, QImage, QColor
 
 from DetectObjects.CircleSeed import CircleSeedNp
 from .CircleSeedItem import CircleSeedItem
@@ -218,11 +218,11 @@ class ShowResultLabel(QLabel):
                 painter.fillRect(circle_seed_item.resize_handel().adjusted(0, 0, -1, -1), Qt.black)
             if index == self._current_item_index or index in self._selected_indexes:
                 try:
-                    painter.fillPath(circle_seed_item.get_path(), Qt.green)
+                    painter.fillPath(circle_seed_item.get_path(), QColor(0, 255, 0, 210))
                 except Exception as e:
                     print(e)
             else:
-                painter.fillPath(circle_seed_item.get_path(), Qt.red)
+                painter.fillPath(circle_seed_item.get_path(), QColor(255, 0, 0, 180))
 
 
 class ShowResultItem(QGraphicsObject):

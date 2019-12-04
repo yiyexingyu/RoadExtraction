@@ -174,14 +174,6 @@ class RoadDetection(QObject):
         if len(self._seed_list) <= 0:
             raise NoInitializeError()
 
-        while not self._next_circle_seed == len(self._seed_list):
-            current_circle_seed = self._seed_list[self._next_circle_seed]  # type: CircleSeed
-            self._next_circle_seed += 1
-
-            # 先进行单向检测 再进行多方向检测
-            if not self.single_direction_detect_approach(current_circle_seed):
-                self.multi_directional_detect_approach(current_circle_seed)
-
         # 检测完毕， 进行形态学处理：进行形态学开操作和闭操作
         self.morphologically_filtering()
 

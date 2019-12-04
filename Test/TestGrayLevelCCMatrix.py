@@ -26,6 +26,8 @@ class ShowImageWidget(QWidget):
     def __init__(self, image: QImage, cv_image: np.ndarray):
         super(ShowImageWidget, self).__init__()
         self.setWindowTitle("道路提取算法测试")
+
+        self.setGeometry(200, 100, 100, 100)
         self.setFixedWidth(image.width() + 320)
         self.setFixedHeight(image.height())
         self._horizon_layout = QHBoxLayout(self)

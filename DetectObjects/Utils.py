@@ -88,12 +88,14 @@ def bound(min_val, value, max_val):
     如果value >= max_val return max_val
     如果value <= min_val return min_val
     否则 return value
-
     :param min_val: 最小值
+    :type min_val: Union[int, float]
     :param value: 被测值
+    :type value: Union[int, float]
     :param max_val: 最大值
+    :type max_val: Union[int, float]
+    :rtype: float
     """
-
     return max(min_val, min(max_val, value))
 
 

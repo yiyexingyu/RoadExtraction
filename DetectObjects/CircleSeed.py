@@ -9,9 +9,10 @@
 import cv2
 import numpy as np
 from PyQt5.QtCore import QPoint
+from PyQt5.QtGui import QPainterPath
 from .Utils import bound
 from Core.DetectionStrategy.Strategy import DetectionStrategy
-from Core.GrayLevelCooccurrenceMatrix import get_circle_spectral_vector
+from Core.GrayLevelCooccurrenceMatrix import get_circle_spectral_vector, road_texture_vector
 
 
 class CircleSeedNp:
@@ -95,7 +96,7 @@ class CircleSeedNp:
 
         # 计算种子的特征信息
         self._spectral_feature_vector = get_circle_spectral_vector(self._seed_pixels)
-        # self._texture_feature_vector = GrayLCM.get_road_texture_vector(seed_pixels_gray)
+        self._texture_feature_vector = road_texture_vector(seed_pixels_gray)
 
     def set_position(self, position: list, image: np.ndarray):
         self._position = position
@@ -112,10 +113,6 @@ class CircleSeedNp:
 
         temp_mod = self._seed_pixels[:, :, 0]
         pixels_position = pixels_position[temp_mod >= 0]
-
-        # pixels_position = pixels_position[temp_mod >= 0].astype('str')
-        # pixels_position = np.char.add(np.char.add(pixels_position[:, 0], ','), pixels_position[:, 1])
-        # pixels_position = pixels_position[:, 1] * image_size[1] + pixels_position[:, 0]
         return pixels_position
 
     def append_child_seed(self, child_seed):
@@ -138,11 +135,24 @@ class CircleSeedNp:
                + spectral_vector + texture_vector + child_seeds_len
 
     @property
+    def road_path(self) -> QPainterPath:
+        path = QPainterPath()
+        path.addEllipse(QPoint(self._position[0], self._position[1]), self._radius, self._radius)
+        return path
+
+    @property
+    def road_feature_vector(self):
+        return np.hstack((self._texture_feature_vector, self._spectral_feature_vector))
+
+    @property
+    def road_feature_distance(self):
+        if self._parent_seed:
+            return np.linalg.norm(np.subtract(self.road_feature_vector, self._parent_seed.road_feature_vector))
+        return 0.
+
+    @property
     def spectral_distance(self):
         return self._spectral_distance
-        # if self._parent_seed:
-        #     return np.linalg.norm(np.subtract(self._spectral_feature_vector, self._parent_seed.spectral_feature_vector))
-        # return 0.
 
     @property
     def texture_distance(self):
