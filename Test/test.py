@@ -11,7 +11,6 @@ import threading
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import pyqtSignal, QThread
 from PyQt5.QtGui import QImage
-from Core.RoadDetection import RoadDetectionEx
 
 
 class RoadDetectThread(QThread):

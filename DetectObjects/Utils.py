@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2019/10/3 20:42
-# @Author  : 何盛信
+# @Author  : 小羽
 # @Email   : 2958029539@qq.com
 # @File    : Utils.py
 # @Project : RoadExtraction
